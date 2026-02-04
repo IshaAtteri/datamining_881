@@ -1,0 +1,5 @@
+# Run the following to install:
+# pip install -r requirements.txt
+
+pandas
+dtale
