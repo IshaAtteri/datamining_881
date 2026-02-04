@@ -37,6 +37,9 @@ title.episode.tsv
 title.principals.tsv
 title.ratings.tsv
 ```
-
+5. Run `load.py`
+6. 
 ## Citations:
 https://developer.imdb.com/non-commercial-datasets/
+
+<img width="498" height="507" alt="image" src="https://github.com/user-attachments/assets/bbda6c5e-85ba-4f49-8778-916960bba302" />
