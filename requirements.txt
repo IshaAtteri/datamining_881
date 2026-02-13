@@ -1,5 +1,8 @@
 # Run the following to install:
 # pip install -r requirements.txt
 
-pandas
-dtale
+pandas~=3.0.0
+dtale~=3.19.1
+requests~=2.32.5
+beautifulsoup4~=4.14.3
+libzim~=3.8.0

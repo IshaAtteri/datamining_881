@@ -1,0 +1,69 @@
+from bs4 import BeautifulSoup
+import os
+from libzim.reader import Archive
+from libzim.search import Query, Searcher
+import csv
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_TSV = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/imdb_datasets/title.basics.test.tsv"))
+OUTPUT_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/wikipedia/wikipedia_html"))
+ZIM_PATH = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/wikipedia/wikipedia_en_all_maxi_2025-08.zim"))
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+zim = Archive(ZIM_PATH)
+searcher = Searcher(zim)
+print("The Zim file is now opened")
+
+#Fetch the html AND the images and put them in a folder
+def fetch_wikipedia_html_with_images(query, save_dir):
+    q = Query().set_query(query)
+    search = searcher.search(q)
+    if search.getEstimatedMatches() == 0:
+        return None
+    results = list(search.getResults(0, 5))
+    best_path = results[0]
+    try:
+        entry = zim.get_entry_by_path(best_path)
+        item = entry.get_item()
+        html_content = bytes(item.content).decode("UTF-8")
+    except Exception:
+        return None
+    soup = BeautifulSoup(html_content, "html.parser")
+    for img in soup.find_all("img"):
+        src = img.get("src")
+        if not src:
+            continue
+        img_path = src.lstrip("/")
+        try:
+            img_entry = zim.get_entry_by_path(img_path)
+            img_bytes = bytes(img_entry.get_item().content)
+        except Exception:
+            continue
+        img_name = os.path.basename(img_path)
+        img_file_path = os.path.join(save_dir, img_name)
+        with open(img_file_path, "wb") as f:
+            f.write(img_bytes)
+        img["src"] = img_name
+    return str(soup)
+
+#Go through each row of the tsv file and try to get the movie on wiki
+with open(INPUT_TSV, encoding="utf-8") as f:
+    reader = csv.DictReader(f, delimiter="\t")
+    for row in reader:
+        tconst = row["tconst"]
+        title = row["primaryTitle"]
+        year = row["startYear"]
+        # folder for each movie
+        movie_dir = os.path.join(OUTPUT_DIR, tconst)
+        os.makedirs(movie_dir, exist_ok=True)
+        outfile = os.path.join(movie_dir, f"{tconst}.html")
+        if os.path.exists(outfile):
+            continue
+        query = f"{title} {year}" if year != "\\N" else title #if year not empty
+        print(f"fetching Wikipedia HTML + images for {tconst}: {query}")
+        html_with_images = fetch_wikipedia_html_with_images(query, movie_dir)
+        if html_with_images:
+            with open(outfile, "w", encoding="utf-8") as out:
+                out.write(html_with_images)
+        else:
+            print(f"no Wikipedia page found for {query}")
