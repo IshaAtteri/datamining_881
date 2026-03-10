@@ -1,5 +1,5 @@
 import shutil
-
+import re
 from bs4 import BeautifulSoup
 import os
 from libzim.reader import Archive
@@ -15,6 +15,11 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 zim = Archive(ZIM_PATH)
 searcher = Searcher(zim)
 print("The Zim file is now opened")
+
+def sanitize_slug(slug):
+    slug = slug.replace("/", "_").replace("\\", "_")
+    slug = re.sub(r'[<>:"|?*]', "_", slug)
+    return slug[:200]
 
 #Fetch the html AND the images and put them in a folder
 def fetch_wikipedia_html_with_images(query, save_dir):
@@ -59,29 +64,40 @@ with open(INPUT_TSV, encoding="utf-8") as f:
         if year is None or titleType != "movie":
             print("Skipping from TSV: ", title)
             continue
+        already_done = False
+        for d in os.listdir(OUTPUT_DIR):
+            if os.path.exists(os.path.join(OUTPUT_DIR, d, f"{tconst}.html")):
+                already_done = True
+                break
+        if already_done:
+            print(f"Skipping already processed: {tconst}")
+            continue
         # folder for each movie
-        movie_dir = os.path.join(OUTPUT_DIR, tconst)
-
+        movie_dir = os.path.join(OUTPUT_DIR, f"_tmp_{tconst}")
         os.makedirs(movie_dir, exist_ok=True)
         query = f"{title} ({year} film)" if year != "\\N" else title #if year not empty
         print(f"fetching Wikipedia HTML + images for {tconst}: {query}")
         result = fetch_wikipedia_html_with_images(query, movie_dir)
         if result is None:
             print("Wikipedia fetch failed")
+            shutil.rmtree(movie_dir, ignore_errors=True)
             continue
         else:
             html_with_images, slug = result
-        slug_dir = os.path.join(OUTPUT_DIR, slug)
-        os.rename(movie_dir, slug_dir)
+        slug_dir = os.path.join(OUTPUT_DIR, sanitize_slug(slug))
         if html_with_images:
             if "Directed by" not in html_with_images:
-                if os.path.exists(slug_dir):
-                    shutil.rmtree(slug_dir)
+                shutil.rmtree(movie_dir, ignore_errors=True)
                 continue
+            if os.path.exists(slug_dir):
+                shutil.rmtree(movie_dir, ignore_errors=True)
+            else:
+                os.rename(movie_dir, slug_dir)
             outfile = os.path.join(slug_dir, f"{tconst}.html")
             if os.path.exists(outfile):
                 continue
             with open(outfile, "w", encoding="utf-8") as out:
                 out.write(html_with_images)
         else:
+            shutil.rmtree(movie_dir, ignore_errors=True)
             print(f"no Wikipedia page found for {query}")
