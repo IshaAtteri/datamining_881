@@ -60,14 +60,15 @@ with open(INPUT_TSV, encoding="utf-8") as f:
         # folder for each movie
         movie_dir = os.path.join(OUTPUT_DIR, tconst)
         os.makedirs(movie_dir, exist_ok=True)
-        outfile = os.path.join(movie_dir, f"{tconst}.html")
-        if os.path.exists(outfile):
-            continue
         query = f"{title} ({year} film)" if year != "\\N" else title #if year not empty
         print(f"fetching Wikipedia HTML + images for {tconst}: {query}")
         html_with_images = fetch_wikipedia_html_with_images(query, movie_dir)
         if html_with_images:
             if "Directed by" not in html_with_images:
+                os.rmdir(movie_dir)
+                continue
+            outfile = os.path.join(movie_dir, f"{tconst}.html")
+            if os.path.exists(outfile):
                 continue
             with open(outfile, "w", encoding="utf-8") as out:
                 out.write(html_with_images)
