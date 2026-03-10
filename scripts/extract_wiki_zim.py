@@ -1,3 +1,5 @@
+import shutil
+
 from bs4 import BeautifulSoup
 import os
 from libzim.reader import Archive
@@ -5,7 +7,7 @@ from libzim.search import Query, Searcher
 import csv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_TSV = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/imdb_datasets/title.basics.test.tsv"))
+INPUT_TSV = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/imdb_datasets/title.basics.tsv"))
 OUTPUT_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data/processed/wikipedia_html"))
 ZIM_PATH = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/wikipedia/wikipedia_en_all_maxi_2025-08.zim"))
 
@@ -44,7 +46,7 @@ def fetch_wikipedia_html_with_images(query, save_dir):
         with open(img_file_path, "wb") as f:
             f.write(img_bytes)
         img["src"] = img_name
-    return str(soup)
+    return str(soup), best_path
 
 #Go through each row of the tsv file and try to get the movie on wiki
 with open(INPUT_TSV, encoding="utf-8") as f:
@@ -59,15 +61,24 @@ with open(INPUT_TSV, encoding="utf-8") as f:
             continue
         # folder for each movie
         movie_dir = os.path.join(OUTPUT_DIR, tconst)
+
         os.makedirs(movie_dir, exist_ok=True)
         query = f"{title} ({year} film)" if year != "\\N" else title #if year not empty
         print(f"fetching Wikipedia HTML + images for {tconst}: {query}")
-        html_with_images = fetch_wikipedia_html_with_images(query, movie_dir)
+        result = fetch_wikipedia_html_with_images(query, movie_dir)
+        if result is None:
+            print("Wikipedia fetch failed")
+            continue
+        else:
+            html_with_images, slug = result
+        slug_dir = os.path.join(OUTPUT_DIR, slug)
+        os.rename(movie_dir, slug_dir)
         if html_with_images:
             if "Directed by" not in html_with_images:
-                os.rmdir(movie_dir)
+                if os.path.exists(slug_dir):
+                    shutil.rmtree(slug_dir)
                 continue
-            outfile = os.path.join(movie_dir, f"{tconst}.html")
+            outfile = os.path.join(slug_dir, f"{tconst}.html")
             if os.path.exists(outfile):
                 continue
             with open(outfile, "w", encoding="utf-8") as out:
