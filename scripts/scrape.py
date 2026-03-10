@@ -9,8 +9,8 @@ headers = {
 params = {
     "action": "query",
     "format": "json",
+    "titles": "Godfather",
     "prop": "extracts",
-    "titles": "Interstellar",
     "explaintext": True,
     "redirects": 1
 }
@@ -19,12 +19,14 @@ response = requests.get(url, headers=headers, params=params)
 
 print("Status:", response.status_code)
 print("Content-Type:", response.headers.get("content-type"))
-print("First 200 chars:\n", response.text[:200])
+print("First 200 chars:\n", response.text[:1000])
 
 data = response.json()
+
+
 
 pages = data["query"]["pages"]
 page = next(iter(pages.values()))
 
 print("\nTitle:", page["title"])
-print("\nPreview:\n", page["extract"][:500])
+print("\nPreview:\n", page["extract"])
