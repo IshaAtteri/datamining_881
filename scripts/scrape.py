@@ -19,7 +19,7 @@ response = requests.get(url, headers=headers, params=params)
 
 print("Status:", response.status_code)
 print("Content-Type:", response.headers.get("content-type"))
-print("First 200 chars:\n", response.text[:200])
+print("First 200 chars:\n", response.text)
 
 data = response.json()
 
