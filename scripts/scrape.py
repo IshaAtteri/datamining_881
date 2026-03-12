@@ -52,7 +52,6 @@ def extract_movie_info(file_path):
                 directed_by = data.get_text(" ", strip=True)
 
             elif header_text == "Starring":
-                # Get cast members split by <br> or links/text
                 cast_items = list(data.stripped_strings)
                 cast = cast_items[:5]
 
@@ -64,11 +63,9 @@ def extract_movie_info(file_path):
     plot_header = soup.find(id="Plot")
 
     if plot_header:
-        # Move to the parent heading container if needed
         current = plot_header.parent
 
         for sibling in current.find_next_siblings():
-            # Stop when next h2 section begins
             if sibling.name == "div" and "mw-heading2" in sibling.get("class", []):
                 break
             if sibling.name == "p":
