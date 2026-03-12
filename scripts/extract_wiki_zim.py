@@ -5,6 +5,7 @@ import os
 from libzim.reader import Archive
 from libzim.search import Query, Searcher
 import csv
+from slugify import slugify
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_TSV = os.path.abspath(os.path.join(BASE_DIR, "../data/raw/imdb_datasets/title.basics.tsv"))
@@ -16,10 +17,9 @@ zim = Archive(ZIM_PATH)
 searcher = Searcher(zim)
 print("The Zim file is now opened")
 
+
 def sanitize_slug(slug):
-    slug = slug.replace("/", "_").replace("\\", "_")
-    slug = re.sub(r'[<>:"|?*]', "_", slug)
-    return slug[:200]
+    return slugify(slug, separator="_", max_length=200) or "_unknown"
 
 #Fetch the html AND the images and put them in a folder
 def fetch_wikipedia_html_with_images(query, save_dir):
