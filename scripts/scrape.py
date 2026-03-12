@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 import os
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, "..", "data", "tt0074888.html")
+# script_dir = os.path.dirname(os.path.abspath(__file__))
+# file_path = os.path.join(script_dir, "..", "data", "tt0074888.html")
 
 def extract_movie_info(file_path):
 
@@ -35,9 +35,14 @@ def extract_movie_info(file_path):
 
     directed_by = None
     cast = []
+    poster_filename = None
+    year = None
 
     if infobox:
         rows = infobox.find_all("tr")
+        img = infobox.select_one("img")
+        if img and img.get("src"):
+            poster_filename = os.path.basename(img["src"])
 
         for row in rows:
             header = row.find("th")
@@ -50,7 +55,8 @@ def extract_movie_info(file_path):
 
             if header_text == "Directed by":
                 directed_by = data.get_text(" ", strip=True)
-
+            elif "Release date" in header_text:
+                year = data.get_text(" ", strip=True)
             elif header_text == "Starring":
                 cast_items = list(data.stripped_strings)
                 cast = cast_items[:5]
@@ -73,14 +79,14 @@ def extract_movie_info(file_path):
 
     plot = plot.strip()
 
-    return title, directed_by, cast, genre, plot
+    return title, directed_by, cast, genre, plot, year, poster_filename
 
-# -----------------------------
-# Print results
-# -----------------------------
-title, directed_by, cast, genre, plot = extract_movie_info(file_path)
-print("Title:", title)
-print("Directed by:", directed_by)
-print("Cast:", cast)
-print("Genre:", genre)
-print("\nPlot:\n", plot)
+# # -----------------------------
+# # Print results
+# # -----------------------------
+# title, directed_by, cast, genre, plot = extract_movie_info(file_path)
+# print("Title:", title)
+# print("Directed by:", directed_by)
+# print("Cast:", cast)
+# print("Genre:", genre)
+# print("\nPlot:\n", plot)
