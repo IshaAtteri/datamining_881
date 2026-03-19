@@ -2,23 +2,42 @@ import pandas as pd
 import os
 from scrape import extract_movie_info
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, "..", "sample_data.xlsx")
-movie_data = pd.read_excel(file_path)
-print(movie_data.columns)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_DIR = os.path.join(BASE_DIR, "../data/processed/wikipedia_html_test/")
+SPREADSHEET_DIR = os.path.join(BASE_DIR, "../data/processed/spreadsheets/")
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-movie_html = os.path.join(script_dir, "..", "data", "tt0074888.html")
+rows = []
 
-title, directed_by, cast, genre, plot = extract_movie_info(movie_html)
-new_row = {
-    "Movie": title,
-    "Director": directed_by,
-    "Cast": ", ".join(cast),
-    "Genre": genre,
-    "Plot": plot
-}
+for folder in os.listdir(INPUT_DIR):
+    path = os.path.join(INPUT_DIR, folder)
+    script_dir = next((f for f in os.listdir(path) if f.endswith(".html")), None)
+    if not script_dir:
+        continue
+    full_path = os.path.join(path, script_dir)
+    slug = os.path.splitext(script_dir)[0]
+    try:
+        print(full_path)
+        title, directed_by, cast, genre, plot, year, poster_filename = extract_movie_info(full_path)
+        rows.append({
+            "Title": title,
+            "Director": directed_by,
+            "Cast": ", ".join(cast),
+            "Genre": genre,
+            "Plot": plot,
+            "Release Date": year,
+            "Slug": slug,
+            "Poster Filename": poster_filename
+        })
 
-movie_data.loc[len(movie_data)] = new_row
-output_path = os.path.join(script_dir, "..", "updated_data.xlsx")
+    except KeyboardInterrupt:
+        movie_data = pd.DataFrame(rows)
+        output_path = os.path.join(SPREADSHEET_DIR, "updated_datav_test.xlsx")
+        movie_data.to_excel(output_path, index=False)
+        quit()
+    except Exception as e:
+        print("error:", e)
+
+movie_data = pd.DataFrame(rows)
+output_path = os.path.join(SPREADSHEET_DIR, "updated_data_test.xlsx")
+print(output_path)
 movie_data.to_excel(output_path, index=False)
