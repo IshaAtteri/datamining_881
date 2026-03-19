@@ -73,7 +73,7 @@ def extract_movie_info(file_path):
 
     plot = plot.strip()
 
-    return title, directed_by, cast, genre, plot
+    return title, directed_by, cast, genre, plot #image url
 
 # -----------------------------
 # Print results
