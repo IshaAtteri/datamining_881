@@ -218,3 +218,5 @@ __marimo__/
 
 # Data Folder
 *.tsv
+
+data/

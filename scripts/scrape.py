@@ -1,11 +1,8 @@
 from bs4 import BeautifulSoup
 import os
 
-# script_dir = os.path.dirname(os.path.abspath(__file__))
-# file_path = os.path.join(script_dir, "..", "data", "tt0074888.html")
 
 def extract_movie_info(file_path):
-
     with open(file_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -66,16 +63,24 @@ def extract_movie_info(file_path):
     # -----------------------------
     plot = ""
 
-    plot_header = soup.find(id="Plot")
+    plot_header = soup.find(id="Plot") or soup.find(id="Synopsis")
 
     if plot_header:
         current = plot_header.parent
-
         for sibling in current.find_next_siblings():
             if sibling.name == "div" and "mw-heading2" in sibling.get("class", []):
                 break
             if sibling.name == "p":
                 plot += sibling.get_text(" ", strip=True) + " "
+
+    if not plot and content:
+        for el in content.find_all(["p", "div"], recursive=False):
+            if el.name == "div" and el.find(["h2"]):
+                break
+            if el.name == "p":
+                text = el.get_text(" ", strip=True)
+                if text:
+                    plot += text + " "
 
     plot = plot.strip()
 
