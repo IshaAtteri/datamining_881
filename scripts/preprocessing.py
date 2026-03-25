@@ -52,6 +52,20 @@ def get_genre(row):
 
     return text
 
+def pre_director(text):
+    if not text:
+        return ""
+    text = text.lower().strip()
+    return text
+
+def clean_cast(text, top_k=5):
+    if not text:
+        return []
+    text = text.lower()
+    cast_list = [actor.strip() for actor in text.split(",")]
+    cast_list = [actor for actor in cast_list if actor]
+    return cast_list
+
 # print(df.columns)
 
 # df['preprocessed'] = df['Plot'].apply(clean_text)
