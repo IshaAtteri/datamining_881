@@ -18,10 +18,6 @@ sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
-# model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-
-# df = pd.read_excel('C:\\Users\\ishaa\\OneDrive\\Documents\\MSU\\Spring 2026\\Data mining\\Project\\sample_data.xlsx', engine='openpyxl')
-
 def clean_plot(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))  # Remove punctuation
@@ -35,11 +31,12 @@ def clean_plot(text):
     return text
 
 def get_genre(row):
+    if pd.isna(row['Genre']):
+        return ""
     movie = row['Title']
-    print(movie)
     text = row['Genre']
-    text = text.split(".")[0]
     text = text.replace(movie, "")
+    text = text.split(".")[0]
     text = text.lower()
     match = re.search(r'is a ((?:\S+\s+){4}\S+)', text)
     if match:
@@ -53,13 +50,14 @@ def get_genre(row):
     return text
 
 def pre_director(text):
-    if not text:
+    if pd.isna(text) or not text:
         return ""
     text = text.lower().strip()
     return text
 
-def clean_cast(text, top_k=5):
-    if not text:
+def clean_cast(text):
+    print(f"Original cast: {text}")
+    if pd.isna(text) or not text:
         return []
     text = text.lower()
     cast_list = [actor.strip() for actor in text.split(",")]
