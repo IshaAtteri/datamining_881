@@ -219,4 +219,6 @@ __marimo__/
 # Data Folder
 *.tsv
 
-data/
+data/processed/wikipedia_html
+data/processed/wikipedia_images
+data/raw
