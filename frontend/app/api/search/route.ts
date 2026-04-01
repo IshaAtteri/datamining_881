@@ -1,3 +1,4 @@
+// api for routing to movie slug based on user's search
 import movies from "../../../../movies.json";                             // import JSON dataset containing all movies 
 
 export async function GET(req: Request) {

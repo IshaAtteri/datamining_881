@@ -8,28 +8,28 @@ export default async function page({params}: {params: any}) {
   if (!movie) return <p>Movie not found</p>;
 
   return (
-    <div className="mt-10 mb-10 bg-background max-w-4xl mx-auto rounded-lg shadow-md">
-      <div className="flex gap-11">
+    <div className="mt-10 mb-10 bg-background max-w-10xl mx-auto rounded-lg shadow-md">
+      <div className="flex gap-9">
         {movie.poster && (
         <img
           src={movie.poster}
           alt={movie.title}
-          className="w-40 h-60 object-cover rounded-md bg-box/95"
+          className="w-50 h-70 object-cover rounded-md bg-box/95"
         />
       )}
       
-      <div className="max-w-2xl flex bg-box/95 border rounded-lg px-5 py-5">
+      <div className="max-w-3xl flex bg-box/95 border rounded-lg px-5 py-5">
         <div className="flex flex-col">
           
           <h1 className="text-3xl font-bold mb-3">
             {movie.title}
           </h1>
 
-          <div className="text-sm text-text-dark mb-2 flex flex-wrap gap-3 items-center">
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-blue-500/20 hover:border-blue-400 hover:scale-[1.02]">
+          <div className="text-sm text-text-dark mb-2 flex flex-wrap gap-5 items-center">
+            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
               {movie.genre}
             </span>
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-blue-500/20 hover:border-blue-400 hover:scale-[1.02]">
+            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
               {movie.releaseDate}
             </span>
           </div>
@@ -38,14 +38,14 @@ export default async function page({params}: {params: any}) {
             {movie.plot}
           </p>
 
-          <div className="text-sm text-text-dark mt-2 flex flex-wrap gap-3 items-center">
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-blue-500/20 hover:border-blue-400 hover:scale-[1.02]">
+          <div className="text-sm text-text-dark mt-3 flex flex-wrap gap-3 items-center">
+            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
               Directed By: {movie.director}
             </span>
           </div>
 
-          <div className="text-sm text-text-dark mt-2 flex flex-wrap gap-3 items-center">
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-blue-500/20 hover:border-blue-400 hover:scale-[1.01]">
+          <div className="text-sm text-text-dark mt-3 flex flex-wrap gap-3 items-center">
+            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.01]">
               Featuring: {movie.cast}
             </span>
           </div>
@@ -53,12 +53,12 @@ export default async function page({params}: {params: any}) {
       </div>
       </div>
 
-      <div className="flex gap-5 flex-wrap justify-center mt-5">
-        <div className="w-40 h-60 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
-        <div className="w-40 h-60 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
-        <div className="w-40 h-60 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
-        <div className="w-40 h-60 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
-        <div className="w-40 h-60 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
+      <div className="flex gap-6 flex-wrap justify-center mt-5">
+        <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
+        <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
+        <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
+        <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
+        <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
       </div>
 
     </div>

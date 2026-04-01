@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const filePath = path.join(__dirname, "../preprocessed_data.xlsx")          // path to excel file -- change this path to be spreadsheets\updated_datav2.xlsx
+// const filePath = path.join(__dirname, "../spreadsheets/updated_datav2.xlsx")        // path to excel file 
 const workbook = XLSX.readFile(filePath);                                   // read excel workbook
 
 const sheetName = workbook.SheetNames[0];                                   // get first sheet 

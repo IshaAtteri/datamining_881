@@ -2,15 +2,16 @@
 
 :root {
   --background: #0A1F44;
+  --highlight: #62b6cba6;
   --text-dark: #000000;
   --text-light: #f9fafb;
-  --box: #D9D9D9;
-  --button: #A71D31;
-  --button-dark: #850e25;
+  --box: #DED6D6;
+  --button: #92140C;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-highlight: var(--highlight);
   --color-text-dark: var(--text-dark);
   --color-text-light: var(--text-light);
   --color-box: var(--box);
@@ -24,4 +25,12 @@
 body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
