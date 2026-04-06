@@ -4,6 +4,21 @@ import os
 def split_CSV(input_file, max_mb_size = 50):                                    # function to split CSV > 50MB into smaller files < 50MB for database purposes 
     df = pd.read_excel(input_file)                                              # load file into df
 
+    df = df.rename(columns = {                                                  # rename columns to match PostgreSQL table
+        "Title": "title",
+        "Director": "director",
+        "Cast": "cast",
+        "Genre": "genre",
+        "Plot": "plot",
+        "Release Date": "release_date",
+        "Slug": "slug",
+        "Poster Filename": "poster_filename",
+        "Processed_Plot": "processed_plot",
+        "Pre_genre": "pre_genre",
+        "Pre_director": "pre_director",
+        "Pre_cast": "pre_cast"
+    })
+
     # calculate num of rows per file to check that file is under max size limit
     row_count = len(df)
     max_size = max_mb_size * 1024 * 1024

@@ -1,8 +1,8 @@
 "use client";                                             // needed for client-specific features like interactivity, state, event handlers 
 
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {useRouter} from "next/navigation";
-import { useRef } from "react";
+import {supabase} from '../lib/supabase';                 // import Supabase client 
 
 type movie = {                                            // define TypeScript type for movie
   title: string;
@@ -12,15 +12,13 @@ type movie = {                                            // define TypeScript t
 
 export default function Home() {
   const [search, setSearch] = useState("");         
-  const [error, setError] = useState("");      
+  const [error, setError] = useState("");    
+  const [moviesList, setMoviesList] = useState<any[]>([]);
   const router = useRouter();                             // router object for navigating to other pages     
   const likesRef = useRef<HTMLDivElement | null>(null);
   const recsRef = useRef<HTMLDivElement | null>(null);
    
-  const scroll = (
-    ref: React.RefObject<HTMLDivElement | null>,
-    dir: "left" | "right"
-  ) => {
+  const scroll = (ref: React.RefObject<HTMLDivElement | null>, dir: "left" | "right") => {
     if (ref.current) {
       ref.current.scrollBy({
         left: dir === "left" ? -700 : 700,
@@ -29,25 +27,58 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {                                                                   // fetch movie data on page load
+    const fetchMovies = async () => {
+      const {data, error} = await supabase.from('movies').select('*').limit(6);       // currently limit to 6 movies
+
+      if (error) {
+        console.error('Error fetching movie list:', error);
+        return;
+      }
+
+      setMoviesList(data);                                                            // store movies in state
+    };
+
+    fetchMovies();
+  }, []);
+
   const userSearch = async (e: any) => {                  // handles form submission - must be async for await to work (await = pauses until JSON parsing is complete!)
     e.preventDefault();                                   // prevent default form submission (page reloading)
 
-    if (!search.trim()) return;
+    if (!search.trim()) return;                           // if search is empty don't do anything 
 
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(search)}`);
-        const movies: movie[] = await res.json();         // convert HTTP response from JSON into JS array of movie objects
+        const {data, error} = await supabase.from('movies').select('*').ilike('title', `%${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col
 
-        if (movies.length > 0 && movies[0].slug)          // if at least one movie is returned from API and first movie has a slug defined
-          router.push(`/movie/${movies[0].slug}`);        // then navigate user to movie detail page using slug of first movie in results
-        else
-          setError("Movie not found");                    // if no movies were returned or first movie has no slug, show error message
-      }
-      catch (err) 
-      {
-        setError("Error fetching movies");
+        if (error) {
+          setError('Error fetching movies');
+          console.error(error);
+          return;
+        }
+
+        if (data && data.length > 0) {                    // if movie found and has slug, navigate to first movie's detail page 
+          router.push(`/movie/${data[0].slug}`);
+        } else 
+          setError('Movie not found');
+      } catch (err) {
+        setError('Error fetching movies');
         console.error(err);
       }
+
+      // try {
+      //   const res = await fetch(`/api/search?q=${encodeURIComponent(search)}`);
+      //   const movies: movie[] = await res.json();         // convert HTTP response from JSON into JS array of movie objects
+
+      //   if (movies.length > 0 && movies[0].slug)          // if at least one movie is returned from API and first movie has a slug defined
+      //     router.push(`/movie/${movies[0].slug}`);        // then navigate user to movie detail page using slug of first movie in results
+      //   else
+      //     setError("Movie not found");                    // if no movies were returned or first movie has no slug, show error message
+      // }
+      // catch (err) 
+      // {
+      //   setError("Error fetching movies");
+      //   console.error(err);
+      // }
   };
 
   return (
@@ -76,6 +107,7 @@ export default function Home() {
           </button>
         </form>
 
+        {/* fix this */}
         <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
           <h2 className="text-2xl font-bold text-text-light mb-1">Your Likes</h2>
           <button onClick={() => scroll(likesRef, "left")}
@@ -108,6 +140,7 @@ export default function Home() {
           </button>
         </div>
 
+        {/* fix this */}
         <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
         <h2 className="text-2xl font-bold text-text-light mb-1">Your Recommendations</h2>
         <button onClick={() => scroll(recsRef, "left")}
