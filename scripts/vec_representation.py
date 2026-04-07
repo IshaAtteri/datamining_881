@@ -1,11 +1,12 @@
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from preprocessing import clean_plot, get_genre, pre_director, clean_cast
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 df = pd.read_excel('C:\\Users\\ishaa\\OneDrive\\Documents\\MSU\\Spring 2026\\Data mining\\Project\\updated_datav2.xlsx', engine='openpyxl')
 df = df.dropna(subset=['Plot'])
+
+df = df[:100]
 
 print(len(df))
 
