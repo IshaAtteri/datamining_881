@@ -1,11 +1,13 @@
-// import movies from "../../../../movies.json";                          // import JSON dataset containing all movies 
+// import movies from "../../../../movies.json";                            // import JSON dataset containing all movies 
 
-"use client";                                                             // needed for client-specific features like interactivity, state, event handlers 
+"use client";                                                               // needed for client-specific features like interactivity, state, event handlers 
 
-import {supabase} from '../../../lib/supabase';                           // import Supabase client
+import {supabase} from '../../../lib/supabase';                             // import Supabase client
 import {use, useEffect, useState} from 'react';
-import {useRouter} from "next/navigation";                                // import this for back button
-export const dynamicParams = true;                                        // allow dynamic parameters, allows pages to be generated for any slug
+import {useRouter} from "next/navigation";                                  // import this for back button
+import MovieRec from "../../../components/MovieRec";
+
+export const dynamicParams = true;                                          // allow dynamic parameters, allows pages to be generated for any slug
 
 // export default async function page({params}: {params: any}) {
 //   const { slug } = await params;                                          // extract movie slug from URL
@@ -41,13 +43,13 @@ export default function Page({params}: {params: any}) {
     };
 
     fetchMovie();
-  }, [slug]);                                                               // re-run if the slug changes
+  }, [slug]);                                                                 // re-run if the slug changes
 
   if (!movie) return;
 
   return (
     <div className="mt-5 mb-5 bg-background max-w-10xl mx-auto rounded-lg shadow-md">
-      <div className="fixed top-4 left-35 w-8 h-8 mb-5">
+      <div className="fixed top-4 left-22 w-8 h-8 mb-5">
         <button onClick={() => router.push("/")} className="text-l text-gray-800 flex items-center justify-center w-8 h-8 rounded-full bg-box hover:bg-highlight hover:cursor-pointer">
           ←
         </button>
@@ -133,14 +135,14 @@ export default function Page({params}: {params: any}) {
       </div>
       </div>
 
-      {/* fix this */}
-      <div className="flex gap-6 flex-wrap justify-center mt-5">
+      {/* <div className="flex gap-6 flex-wrap justify-center mt-5">
         <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
         <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
         <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
         <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
         <div className="w-45 h-65 bg-box/95 border rounded-md shadow transition-transform duration-300 hover:scale-102 hover:cursor-pointer"></div>
-      </div>
+      </div> */}
+      <MovieRec/>
 
     </div>
   );
