@@ -13,9 +13,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-RATINGS_FILE = os.path.join(BASE_DIR, "data", "processed", "spreadsheets", "2_netflix_ground_truth.csv")
+RATINGS_FILE = os.path.join(BASE_DIR, "data", "processed", "spreadsheets", "2_netflix_ground_truth.xlsx")
 EMBEDDINGS_FILE = os.path.join(BASE_DIR, "data", "processed", "xplot_embeddings_full_data.npy")
-OUTPUT_PARQUET = os.path.join(BASE_DIR, "data", "processed", "pairwise_training_data.parquet")
+OUTPUT_PARQUET = os.path.join(BASE_DIR, "data", "processed", "pairwise_training_data.parquet") # why parquet? cuz its faster prolly https://cgorale111.medium.com/csv-vs-excel-vs-parquet-vs-binary-which-data-format-should-you-use-in-data-science-ml-81d435442376
 OUTPUT_CSV = os.path.join(BASE_DIR, "data", "processed", "pairwise_training_data.csv")
 
 def load_netflix_ratings():
