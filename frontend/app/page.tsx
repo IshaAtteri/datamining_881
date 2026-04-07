@@ -1,10 +1,13 @@
-"use client";                                             // needed for client-specific features like interactivity, state, event handlers 
+"use client";                                                                         // needed for client-specific features like interactivity, state, event handlers 
 
 import {useState, useEffect, useRef} from "react";
 import {useRouter} from "next/navigation";
-import {supabase} from '../lib/supabase';                 // import Supabase client 
+import {supabase} from '../lib/supabase';                                             // import Supabase client 
 
-type movie = {                                            // define TypeScript type for movie
+import Likes from "../components/Likes";
+import Recs from "../components/Recs";
+
+type movie = {                                                                        // define TypeScript type for movie
   title: string;
   slug?: string;
   poster?: string | null;
@@ -14,18 +17,19 @@ export default function Home() {
   const [search, setSearch] = useState("");         
   const [error, setError] = useState("");    
   const [moviesList, setMoviesList] = useState<any[]>([]);
-  const router = useRouter();                             // router object for navigating to other pages     
-  const likesRef = useRef<HTMLDivElement | null>(null);
-  const recsRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();                                                         // router object for navigating to other pages  
+
+  // const likesRef = useRef<HTMLDivElement | null>(null);
+  // const recsRef = useRef<HTMLDivElement | null>(null);
    
-  const scroll = (ref: React.RefObject<HTMLDivElement | null>, dir: "left" | "right") => {
-    if (ref.current) {
-      ref.current.scrollBy({
-        left: dir === "left" ? -700 : 700,
-        behavior: "smooth",
-      });
-    }
-  };
+  // const scroll = (ref: React.RefObject<HTMLDivElement | null>, dir: "left" | "right") => {
+  //   if (ref.current) {
+  //     ref.current.scrollBy({
+  //       left: dir === "left" ? -700 : 700,
+  //       behavior: "smooth",
+  //     });
+  //   }
+  // };
 
   useEffect(() => {                                                                   // fetch movie data on page load
     const fetchMovies = async () => {
@@ -42,10 +46,10 @@ export default function Home() {
     fetchMovies();
   }, []);
 
-  const userSearch = async (e: any) => {                  // handles form submission - must be async for await to work (await = pauses until JSON parsing is complete!)
-    e.preventDefault();                                   // prevent default form submission (page reloading)
+  const userSearch = async (e: any) => {                                              // handles form submission - must be async for await to work (await = pauses until JSON parsing is complete!)
+    e.preventDefault();                                                               // prevent default form submission (page reloading)
 
-    if (!search.trim()) return;                           // if search is empty don't do anything 
+    if (!search.trim()) return;                                                       // if search is empty don't do anything 
 
       try {
         const {data, error} = await supabase.from('movies').select('*').ilike('title', `%${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col
@@ -56,7 +60,7 @@ export default function Home() {
           return;
         }
 
-        if (data && data.length > 0) {                    // if movie found and has slug, navigate to first movie's detail page 
+        if (data && data.length > 0) {                                                // if movie found and has slug, navigate to first movie's detail page 
           router.push(`/movie/${data[0].slug}`);
         } else 
           setError('Movie not found');
@@ -91,12 +95,12 @@ export default function Home() {
             placeholder="Search for a movie..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value);                              // update search text as user types
-              setError("");                                           // clear error when user starts typing 
+              setSearch(e.target.value);                                              // update search text as user types
+              setError("");                                                           // clear error when user starts typing 
             }}
             className="px-4 py-2 border rounded bg-box w-230"
           />
-          {search && (                                                // clear button 
+          {search && (                                                                // clear button 
             <button type="button" onClick={() => setSearch("")} className="absolute right-2 -top-2 mr-2 h-full flex items-center justify-center text-gray-500 hover:cursor-pointer">
               ✕
             </button>
@@ -107,8 +111,8 @@ export default function Home() {
           </button>
         </form>
 
-        {/* fix this */}
-        <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
+        <Likes/>
+        {/* <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
           <h2 className="text-2xl font-bold text-text-light mb-1">Your Likes</h2>
           <button onClick={() => scroll(likesRef, "left")}
             className="absolute -left-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
@@ -138,10 +142,10 @@ export default function Home() {
             className="absolute -right-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
               →
           </button>
-        </div>
+        </div> */}
 
-        {/* fix this */}
-        <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
+        <Recs/>
+        {/* <div className="flex flex-col gap-1 w-full rounded-lg px-2 py-1 relative"> 
         <h2 className="text-2xl font-bold text-text-light mb-1">Your Recommendations</h2>
         <button onClick={() => scroll(recsRef, "left")}
           className="absolute -left-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
@@ -171,7 +175,7 @@ export default function Home() {
           className="absolute -right-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
             →
         </button>
-      </div>
+      </div> */}
 
       </main>
     </div>
