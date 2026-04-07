@@ -3,11 +3,11 @@ import os
 from rapidfuzz import fuzz
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-NETFLIX_DIR = os.path.join(BASE_DIR, "../data/raw/netflix/")
-MOVIE_EXCEL = os.path.join(BASE_DIR, "../data/processed/spreadsheets/updated_data_test.xlsx")
+NETFLIX_DIR = os.path.join(BASE_DIR, "../../data/raw/netflix/")
+MOVIE_EXCEL = os.path.join(BASE_DIR, "../../data/processed/spreadsheets/3_preprocessed_dataset.xlsx")
 MOVIE_TITLES = os.path.join(NETFLIX_DIR, "movie_titles.csv")
 COMBINED_FILES = [os.path.join(NETFLIX_DIR, f"combined_data_{i}.txt") for i in range(1, 5)]
-OUTPUT = os.path.join(BASE_DIR, "../data/processed/spreadsheets/fused_gtruth_test.csv")
+OUTPUT = os.path.join(BASE_DIR, "../../data/processed/spreadsheets/2_netflix_ground_truth.csv")
 
 TITLE_THRESHOLD = 85   # fuzzy search
 

@@ -6,25 +6,21 @@ import nltk
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from sentence_transformers import SentenceTransformer
 import pkg_resources
-from symspellpy.symspellpy import SymSpell, Verbosity
 
 nltk.download('wordnet')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 
 stop_words = set(stopwords.words('english'))
-sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
+_PUNCT_TABLE = str.maketrans('', '', string.punctuation)
 
 def clean_plot(text):
     text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))  # Remove punctuation
+    text = text.translate(_PUNCT_TABLE)
     text = re.sub(r'\W', ' ', text)
-    suggestions = sym_spell.lookup_compound(text, max_edit_distance=2)
-    if suggestions:
-        text = suggestions[0].term
     text = ([word for word in word_tokenize(text) if word not in stop_words])
     text = [stemmer.stem(word) for word in text]
     text = ' '.join(lemmatizer.lemmatize(word) for word in text)
@@ -42,7 +38,7 @@ def get_genre(row):
     if match:
         words = match.group(1).split()
         text = ' '.join(words[1:])
-    text = text.translate(str.maketrans('', '', string.punctuation))  # Remove punctuation
+    text = text.translate(_PUNCT_TABLE)
     text = re.sub(r'\W', ' ', text)  # Remove special characters
     text = ([word for word in word_tokenize(text) if word not in stop_words])
     text = ' '.join(text)
