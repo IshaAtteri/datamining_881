@@ -1,6 +1,7 @@
 # uvicorn datamining_881.pipeline_code.6_serving.model_server:app --reload --host 0.0.0.0 --port 8000
 # http://localhost:8000/docs
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import numpy as np
@@ -11,6 +12,17 @@ import joblib
 import re
 
 app = FastAPI(title="Model Endpoint")
+
+# needed to add this to connect this code to frontend stuff - a
+################ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # current Next.js frontend url -- will need to change when switching to vercel
+    allow_credentials=True,
+    allow_methods=["*"],                      # allow POST, GET, OPTIONS, etc
+    allow_headers=["*"],
+)
+#####################
 
 model = None
 feature_cols = None
