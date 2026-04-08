@@ -1,6 +1,9 @@
 "use client";
 import {useRef} from "react";
 
+import {FaArrowLeftLong} from "react-icons/fa6";
+import {FaArrowRightLong} from "react-icons/fa6";
+
 export default function Recs() {
     const RecsRef = useRef<HTMLDivElement | null>(null);
 
@@ -20,7 +23,7 @@ export default function Recs() {
           <h2 className="text-2xl font-bold text-text-light mb-1">Your Recommendations</h2>
           <button onClick={() => scroll(RecsRef, "left")}
             className="absolute -left-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
-              ←
+              <FaArrowLeftLong/>
           </button> 
           <div ref={RecsRef} className="flex flex-row gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar py-2">
             <div className="bg-box border rounded-lg p-4 w-45 h-65 flex-shrink-0 snap-start hover:cursor-pointer hover:scale-[1.02] transition-transform duration-200">
@@ -44,7 +47,7 @@ export default function Recs() {
           </div>
           <button onClick={() => scroll(RecsRef, "right")}
             className="absolute -right-10 top-[60%] -translate-y-1/2 z-10 bg-black/50 text-white px-2 py-1 rounded hover:cursor-pointer">
-              →
+              <FaArrowRightLong/>
           </button>
     </div>
   );

@@ -6,6 +6,9 @@ import {supabase} from '../../../lib/supabase';                             // i
 import {use, useEffect, useState} from 'react';
 import {useRouter} from "next/navigation";                                  // import this for back button
 import MovieRec from "../../../components/MovieRec";
+import LikeButton from "../../../components/LikeButton";
+
+import {FaArrowLeftLong} from "react-icons/fa6";
 
 export const dynamicParams = true;                                          // allow dynamic parameters, allows pages to be generated for any slug
 
@@ -51,18 +54,26 @@ export default function Page({params}: {params: any}) {
     <div className="mt-5 mb-5 bg-background max-w-10xl mx-auto rounded-lg shadow-md">
       <div className="fixed top-4 left-22 w-8 h-8 mb-5">
         <button onClick={() => router.push("/")} className="text-l text-gray-800 flex items-center justify-center w-8 h-8 rounded-full bg-box hover:bg-highlight hover:cursor-pointer">
-          ←
+          <FaArrowLeftLong/>
         </button>
       </div>
       
       <div className="flex gap-9">
-        {movie.poster_filename && (
-        <img
-          src={`https://qivcmhdrljwmpwujkwqd.supabase.co/storage/v1/object/public/Wiki_Images/wikipedia_images/${movie.poster_filename}`}
-          alt={movie.title}
-          className="w-50 h-70 object-cover rounded-md bg-box/95"
-        />
-      )}
+        <div className="relative group w-50 h-70 -mr-3">
+          {movie.poster_filename && (
+          <>
+            <img
+              src={`https://qivcmhdrljwmpwujkwqd.supabase.co/storage/v1/object/public/Wiki_Images/wikipedia_images/${movie.poster_filename}`}
+              alt={movie.title}
+              className="w-50 h-70 object-cover rounded-md bg-box/95"
+            />
+            <div className="absolute inset-0 bg-gray-900/50 opacity-0 group-hover:opacity-100 transition rounded-md" />
+            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition">
+              <LikeButton/>
+            </div>
+          </>
+          )}
+        </div>
 
       <div className="max-w-3xl flex bg-box/95 border rounded-lg px-5 py-5">
         <div className="flex flex-col">
