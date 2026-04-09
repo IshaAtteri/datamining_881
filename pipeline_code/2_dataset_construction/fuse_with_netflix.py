@@ -1,62 +1,60 @@
 import pandas as pd
 import os
-from rapidfuzz import fuzz
+from rapidfuzz import process, fuzz
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 NETFLIX_DIR = os.path.join(BASE_DIR, "../../data/raw/netflix/")
 MOVIE_EXCEL = os.path.join(BASE_DIR, "../../data/processed/spreadsheets/3_preprocessed_dataset.xlsx")
 MOVIE_TITLES = os.path.join(NETFLIX_DIR, "movie_titles.csv")
 COMBINED_FILES = [os.path.join(NETFLIX_DIR, f"combined_data_{i}.txt") for i in range(1, 5)]
-OUTPUT = os.path.join(BASE_DIR, "../../data/processed/spreadsheets/2_netflix_ground_truth.csv")
+OUTPUT = os.path.join(BASE_DIR, "../../data/processed/spreadsheets/2_netflix_ground_truth.tsv")
 
-TITLE_THRESHOLD = 85   # fuzzy search
+TITLE_THRESHOLD = 85
 
 main_data = pd.read_excel(MOVIE_EXCEL)
 main_data["title_lower"] = main_data["Title"].str.lower().str.strip()
 main_data["director_lower"] = main_data["Director"].fillna("").str.lower().str.strip()
 
+main_titles = main_data["title_lower"].tolist()
 
 records = []
 with open(MOVIE_TITLES, encoding="latin-1") as f:
     for line in f:
-        line = line.strip()
-        parts = line.split(",", 2)
+        parts = line.strip().split(",", 2)
         if len(parts) == 3:
-            records.append({"netflix_id": int(parts[0]), "year": parts[1], "title": parts[2].strip()})
+            records.append((int(parts[0]), parts[1], parts[2].strip().lower()))
 
-titles_df = pd.DataFrame(records)
-titles_df["title_lower"] = titles_df["title"].str.lower().str.strip()
-netflix_id_to_tt = {}   # netflix_id -> tt_id
+titles_df = pd.DataFrame(records, columns=["netflix_id", "year", "title_lower"])
 
-for _, nrow in titles_df.iterrows():
-    best_score = 0
-    best_meta = None
+netflix_id_to_tt = {}
 
-    #https://github.com/rapidfuzz/RapidFuzz docs
-    for _, mrow in main_data.iterrows():
-        score = fuzz.ratio(nrow["title_lower"], mrow["title_lower"])
-        if score > best_score:
-            best_score = score
-            best_meta = mrow
+for nf_id, nf_year, nf_title in titles_df.itertuples(index=False):
+    match = process.extractOne(
+        nf_title,
+        main_titles,
+        scorer=fuzz.ratio,
+        score_cutoff=TITLE_THRESHOLD
+    )
 
-    if best_score < TITLE_THRESHOLD or best_meta is None:
+    if match is None:
         continue
 
-    # Director match
+    best_title, best_score, match_idx = match
+    best_meta = main_data.iloc[match_idx]
+
     confirmed = best_score >= TITLE_THRESHOLD
-    print(best_score)
+
     if best_meta["director_lower"] and best_score >= 70:
-        # year relese year match
         try:
             meta_year = str(best_meta["Release Date"])
-            nf_year = str(int(nrow["year"])) if pd.notna(nrow["year"]) else ""
-            if nf_year and nf_year in meta_year:
+            nf_year_str = str(int(nf_year)) if pd.notna(nf_year) else ""
+            if nf_year_str and nf_year_str in meta_year:
                 confirmed = True
-        except Exception:
+        except:
             pass
 
     if confirmed:
-        netflix_id_to_tt[int(nrow["netflix_id"])] = best_meta["Slug"]
+        netflix_id_to_tt[nf_id] = best_meta["Slug"]
 
 print(f"Matched {len(netflix_id_to_tt)} Netflix movies to tt Ids")
 
@@ -68,24 +66,27 @@ for filepath in COMBINED_FILES:
     print(f"Reading {os.path.basename(filepath)}...")
     with open(filepath, encoding="latin-1") as f:
         for line in f:
-            line = line.strip()
-            if line.endswith(":"):
-                current_movie_id = int(line[:-1])
-            elif current_movie_id in valid_netflix_ids:
-                parts = line.split(",")
-                if len(parts) == 3:
-                    customer_id, rating, date = parts
-                    rows.append({
-                        "customer_id": int(customer_id),
-                        "tt_id": netflix_id_to_tt[current_movie_id],
-                        "rating": int(rating),
-                        "date": date,
-                    })
+            if line.endswith(":\n"):
+                current_movie_id = int(line[:-2])
+                continue
 
-print(f"Found {len(rows):,} rating")
+            if current_movie_id not in valid_netflix_ids:
+                continue
+
+            parts = line.strip().split(",")
+            if len(parts) == 3:
+                customer_id, rating, date = parts
+                rows.append((
+                    int(customer_id),
+                    netflix_id_to_tt[current_movie_id],
+                    int(rating),
+                    date
+                ))
+
+df = pd.DataFrame(rows, columns=["customer_id", "tt_id", "rating", "date"])
+
+print(f"Found {len(rows):,} ratings")
 print(f"Found {len(valid_netflix_ids):,} movies ground truth")
 
-
-df = pd.DataFrame(rows)
-df.to_csv(OUTPUT, index=False)
+df.to_csv(OUTPUT, sep="\t", index=False)
 print(f"Written to {OUTPUT}")

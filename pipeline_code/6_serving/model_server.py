@@ -1,4 +1,4 @@
-# uvicorn datamining_881.pipeline_code.6_serving.model_server:app --reload --host 0.0.0.0 --port 8000
+# uvicorn pipeline_code.6_serving.model_server:app --reload --host 0.0.0.0 --port 8000
 # http://localhost:8000/docs
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,7 +32,8 @@ embedding_norms = None
 slug_to_idx = None
 weights = None
 
-TOP_K_PREFILTER = 200
+MODELS_FOLDER = "models-item-item-2milpairs-100coraters"
+TOP_K_PREFILTER = 75636
 
 @app.on_event("startup")
 def load_model_and_data():
@@ -56,12 +57,17 @@ def load_model_and_data():
         weights = {"plot_sim":0.3,"year_sim":0.15,"genre_sim":0.2,"director_match":0.15,"cast_sim":0.2}
 
     # load trained model if available
-    model_path = base_dir / "models" / "pairwise_recommender.pkl"
-    feature_path = base_dir / "models" / "feature_columns.json"
+    model_path = base_dir / "data" / "processed" / MODELS_FOLDER / "item_item_recommender.pkl"
+    print(model_path)
+    feature_path = base_dir / "data" / "processed" / MODELS_FOLDER / "feature_columns.json"
     if model_path.exists() and feature_path.exists():
-        model = joblib.load(model_path) # https://www.youtube.com/watch?v=-WfuEJfItjY
+        model = joblib.load(model_path)
         with open(feature_path) as f:
             feature_cols = json.load(f)
+        print(f"Loaded item-to-item model with features: {feature_cols}")
+        print(f"TOP_K_PREFILTER: {TOP_K_PREFILTER}")
+    else:
+        print(f"Model not found at {model_path}. /predict/model endpoint will be unavailable.")
 
     # load embeddings and metadata
     embeddings_path = base_dir / "data" / "processed" / "xplot_embeddings_full_data.npy"
@@ -190,11 +196,11 @@ def predict(request: RecommendationRequest):
 
 @app.post("/predict/model", response_model=List[ScoreResponse])
 def predict_model(request: RecommendationRequest):
-    return compute_and_score(request, use_model=True)
+    return compute_and_score(request, use_model=True)[:10]
 
 @app.post("/predict/algorithm", response_model=List[ScoreResponse])
 def predict_algorithm(request: RecommendationRequest):
-    return compute_and_score(request, use_model=False)
+    return compute_and_score(request, use_model=False)[:10]
 
 @app.get("/health")
 def health():
