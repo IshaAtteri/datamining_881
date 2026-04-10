@@ -26,7 +26,7 @@ export default function Page({params}: {params: any}) {
 
   useEffect(() => {
     const fetchMovie = async () => {
-      const { data, error } = await supabase
+      const {data, error} = await supabase
         .from('movies')
         .select('*')
         .eq('slug', slug)
@@ -92,9 +92,9 @@ export default function Page({params}: {params: any}) {
           </div> */}
 
           <div className="text-sm text-text-dark mb-2 flex flex-wrap gap-5 items-center">
-            {movie.genre && (
+            {movie.pre_genre && (
               <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
-                {movie.genre}
+                {movie.pre_genre}
               </span>
             )}
 
