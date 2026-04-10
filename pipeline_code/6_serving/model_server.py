@@ -33,7 +33,7 @@ slug_to_idx = None
 weights = None
 
 MODELS_FOLDER = "models-item-item-2milpairs-100coraters"
-TOP_K_PREFILTER = 75636
+TOP_K_PREFILTER = 200
 
 @app.on_event("startup")
 def load_model_and_data():
