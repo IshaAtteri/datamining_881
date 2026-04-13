@@ -5,8 +5,10 @@
 import {supabase} from '../../../lib/supabase';                             // import Supabase client
 import {use, useEffect, useState} from 'react';
 import {useRouter} from "next/navigation";                                  // import this for back button
+
 import MovieRec from "../../../components/MovieRec";
 import LikeButton from "../../../components/LikeButton";
+import Toggle from "../../../components/Toggle";
 
 import {FaArrowLeftLong} from "react-icons/fa6";
 
@@ -22,6 +24,7 @@ export default function Page({params}: {params: any}) {
   const {slug} = use(params) as SlugParams;                                  // extract movie slug from URL
   const [movie, setMovie] = useState<any|null>(null);
   const [showFullPlot, setShowFullPlot] = useState(false);
+  const [recMethod, setRecMethod] = useState<"algo"|"model">("algo");
   const router = useRouter();
 
   useEffect(() => {
@@ -52,10 +55,11 @@ export default function Page({params}: {params: any}) {
 
   return (
     <div className="mt-5 mb-5 bg-background max-w-10xl mx-auto rounded-lg shadow-md">
-      <div className="fixed top-4 left-22 w-8 h-8 mb-5">
-        <button onClick={() => router.push("/")} className="text-l text-gray-800 flex items-center justify-center w-8 h-8 rounded-full bg-box hover:bg-highlight hover:cursor-pointer">
-          <FaArrowLeftLong/>
+      <div className="fixed top-4 left-10 z-50 flex items-center gap-3">
+        <button onClick={() => router.push("/")} className="text-l text-gray-800 flex items-center justify-center w-6 h-6 rounded-full bg-box hover:bg-highlight hover:cursor-pointer hover:text-white">
+          <FaArrowLeftLong className="text-xs"/>
         </button>
+        <Toggle selected = {recMethod} onChange = {setRecMethod}/>
       </div>
       
       <div className="flex gap-9">
@@ -145,8 +149,8 @@ export default function Page({params}: {params: any}) {
         </div>
       </div>
       </div>
-
-      <MovieRec querySlug = {movie.slug}/>
+      
+      <MovieRec querySlug = {movie.slug} method = {recMethod}/>
 
     </div>
   );
