@@ -14,10 +14,6 @@ import {FaArrowLeftLong} from "react-icons/fa6";
 
 export const dynamicParams = true;                                          // allow dynamic parameters, allows pages to be generated for any slug
 
-// export default async function page({params}: {params: any}) {
-//   const { slug } = await params;                                          // extract movie slug from URL
-//   const movie = movies.find((m) => m.slug?.trim() === slug?.trim());      // search movies array for movie whose slug matches 
-
 type SlugParams = {slug: string};
 
 export default function Page({params}: {params: any}) {
@@ -79,31 +75,25 @@ export default function Page({params}: {params: any}) {
           )}
         </div>
 
-      <div className="max-w-3xl flex bg-box/95 border rounded-lg px-5 py-5">
+      <div className="max-w-3xl flex bg-highlight/85 border rounded-lg px-2 py-2">
+      <div className="max-w-3xl flex bg-box rounded-lg px-5 py-5">
         <div className="flex flex-col">
           
-          <h1 className="text-3xl font-bold mb-3">
-            {movie.title}
+          <h1 className="text-3xl font-bold mb-2 -mt-1">
+            {/* {movie.title} */}
+            {movie.title.replace(/\([^)]*\bfilm\b[^)]*\)/gi, '')}
+            {/* \( and \) matches parentheses,  [^)]* refers to anything inside parentheses, \bfilm\b makes sure the word film is present, gi makes it case-insensitive, wrap in / / for syntax purposes*/}
           </h1>
-
-          {/* <div className="text-sm text-text-dark mb-2 flex flex-wrap gap-5 items-center">
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
-              {movie.genre}
-            </span>
-            <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
-              {movie.releaseDate}
-            </span>
-          </div> */}
 
           <div className="text-sm text-text-dark mb-2 flex flex-wrap gap-5 items-center">
             {movie.pre_genre && (
-              <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
+              <span className="bg-gray-200/50 border-2 border-background/60 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight/60 hover:border-background hover:scale-[1.02]">
                 {movie.pre_genre}
               </span>
             )}
 
             {movie.releaseDate && (
-              <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
+              <span className="bg-gray-200/50 border-2 border-background/60 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight/60 hover:border-background hover:scale-[1.02]">
                 {movie.releaseDate}
               </span>
             )}
@@ -120,12 +110,9 @@ export default function Page({params}: {params: any}) {
           </div>
 
           <div className="text-sm text-text-dark mt-3 flex flex-wrap gap-2 items-center">
-            {/* <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
-              Directed By: {movie.director}
-            </span> */}
               {movie.director && (
                 <div className="text-sm text-text-dark flex flex-wrap gap-2 items-center">
-                  <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.02]">
+                  <span className="bg-gray-200/50 border-2 border-background/60 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight/60 hover:border-background hover:scale-[1.02]">
                     Directed By: {movie.director}
                   </span>
                 </div>
@@ -134,13 +121,9 @@ export default function Page({params}: {params: any}) {
           </div>
 
           <div className="text-sm text-text-dark mt-3 flex flex-wrap gap-2 items-center">
-            {/* <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.01]">
-              Featuring: {movie.cast}
-            </span> */}
-
             {movie.cast && (
               <div className="text-sm text-text-dark flex flex-wrap gap-2 items-center">
-                <span className="bg-box border border-gray-400 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight hover:border-background hover:scale-[1.01]">
+                <span className="bg-gray-200/50 border-2 border-background/60 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm hover:bg-highlight/60 hover:border-background hover:scale-[1.01]">
                   Featuring: {movie.cast}
                 </span>
               </div>
@@ -149,9 +132,9 @@ export default function Page({params}: {params: any}) {
         </div>
       </div>
       </div>
+      </div>
       
       <MovieRec querySlug = {movie.slug} method = {recMethod}/>
-
     </div>
   );
 }
