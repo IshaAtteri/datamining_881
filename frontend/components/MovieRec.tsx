@@ -22,11 +22,11 @@ export default function MovieRec({querySlug}: movieRecParam) {
 
     const fetchRecs = async () => {
       try {
-        const res = await fetch("http://localhost:8000/predict",                            // fetch top recommendations from API
+        const res = await fetch("http://localhost:8000/predict/algorithm",                  // fetch top recommendations from API
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({query_slug: querySlug}),
+          body: JSON.stringify({query_slugs: [querySlug]}),
         });
 
         const data: movieRec[] = await res.json();

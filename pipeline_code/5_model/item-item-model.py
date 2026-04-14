@@ -32,7 +32,7 @@ from helper_functions import (
     BASE_DIR
 )
 
-MODEL_DIR = os.path.join(BASE_DIR, "data", "processed", "models-item-item-2milpairs-100coraters")
+MODEL_DIR = os.path.join(BASE_DIR, "data", "processed", "models-item-item-05milpairs-150coraters")
 OUTPUT_PARQUET = os.path.join(MODEL_DIR, "item_item_training_data.parquet")
 EVAL_PARQUET = os.path.join(MODEL_DIR, "item_item_eval_data.parquet")
 MODEL_FILE = os.path.join(MODEL_DIR, "item_item_recommender.pkl")
@@ -40,8 +40,8 @@ FEATURES_FILE = os.path.join(MODEL_DIR, "feature_columns.json")
 SPLIT_INFO_FILE = os.path.join(MODEL_DIR, "train_test_split_info.json")
 
 TRAIN_FRACTION = 0.60
-MIN_CO_RATERS = 100
-MAX_PAIRS = 2_000_000
+MIN_CO_RATERS = 150 #higher reduces noise
+MAX_PAIRS = 500_000 #lower pair makes model more confident
 CHUNK_SIZE = 50_000
 RANDOM_SEED = 42
 
