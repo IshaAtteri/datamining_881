@@ -41,7 +41,6 @@ export default function Page({params}: {params: any}) {
       }
 
       setMovie(data);
-
     };
 
     fetchMovie();
@@ -75,7 +74,7 @@ export default function Page({params}: {params: any}) {
           )}
         </div>
 
-      <div className="max-w-3xl flex bg-highlight/85 border rounded-lg px-2 py-2">
+      <div className="max-w-3xl flex bg-highlight/85 border rounded-xl px-2 py-2">
       <div className="max-w-3xl flex bg-box rounded-lg px-5 py-5">
         <div className="flex flex-col">
           
