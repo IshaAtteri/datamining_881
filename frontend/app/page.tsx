@@ -21,7 +21,7 @@ export default function Home() {
 
   useEffect(() => {                                                                   // fetch movie data on page load
     const fetchMovies = async () => {
-      const {data, error} = await supabase.from('movies').select('*').limit(6);       // currently limit to 6 movies
+      const {data, error} = await supabase.from('movies').select('*').limit(10);       // currently limit to 6 movies
 
       if (error) {
         console.error('Error fetching movie list:', error);
@@ -40,7 +40,8 @@ export default function Home() {
     if (!search.trim()) return;                                                       // if search is empty don't do anything 
 
       try {
-        const {data, error} = await supabase.from('movies').select('*').ilike('title', `%${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col
+        //const {data, error} = await supabase.from('movies').select('*').ilike('title', `${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col -- '%${search}%' = flexible but slow, search% = fast but less flexible
+        const {data, error} = await supabase.from('movies').select('*').textSearch('title', search);      // using precomputed index from query in supabase, jumps directly to matches 
 
         if (error) {
           setError('Error fetching movies');

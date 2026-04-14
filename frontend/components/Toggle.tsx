@@ -1,22 +1,40 @@
 "use client";
 
+import { useState } from "react";
+import { FaChevronDown } from "react-icons/fa";
+
+type Method = "algo" | "model";
+
 type ToggleParams = {
-  selected: string;
-  onChange: (method: string) => void;
+  selected: Method;
+  onChange: (method: Method) => void;
 };
 
-const methods = [
+const methods: {id: Method; label: string}[] = [
   { id: "algo", label: "Algorithm" },
   { id: "model", label: "Model" },
 ];
 
-export default function Toggle({selected, onChange,}: ToggleParams) {
+export default function Toggle({selected, onChange}: ToggleParams) {
+  const [open, setOpen] = useState(false);
+  const current = methods.find((m) => m.id === selected);
+
   return (
-    <div className="flex gap-3 justify-center mt-4">
-      {methods.map((algo) => (<button key={algo.id} onClick={() => onChange(algo.id)} className={`px-4 py-2 rounded-md border transition
-            ${selected === algo.id ? "bg-blue-500 text-white" : "bg-gray-100 hover:bg-gray-200"}`}> {algo.label}
-        </button>
-      ))}
+    <div className="relative inline-block mt-0.5">
+      <button onClick = {() => setOpen(!open)} className="flex items-center gap-2 px-3 py-1 rounded-md bg-box transition text-xs hover:cursor-pointer">
+        {current?.label}
+          <FaChevronDown className={`transition-transform duration-200 text-xs ${open ? "rotate-180" : ""}`}/>
+      </button>
+
+      {open && (<div className="absolute mt-2 w-full rounded-md bg-box shadow-md z-50 text-xs">
+        {methods.map((m) => (
+          <button key={m.id} onClick={() => {onChange(m.id); setOpen(false);}}
+            className={`block w-full text-left px-4 py-2 transition ${selected === m.id ? "bg-highlight/90 font-bold": "hover:bg-gray-100"}`}>
+              {m.label}
+          </button>
+        ))}
+        </div>
+      )}
     </div>
   );
 }

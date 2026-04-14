@@ -5,6 +5,7 @@ import {supabase} from '../lib/supabase';                                       
 
 type movieRecParam = {
   querySlug: string;                                                                        // querySlug = slug of searched movie
+  method: "algo" | "model";                                                                 // decides which method to use for recommendation system
 };
 
 type movieRec = {
@@ -14,7 +15,7 @@ type movieRec = {
   poster_filename?: string;   
 };
 
-export default function MovieRec({querySlug}: movieRecParam) {
+export default function MovieRec({querySlug, method}: movieRecParam) {
   const [recommendations, setRecommendations] = useState<movieRec[]>([]);
   
   useEffect(() => {
@@ -22,12 +23,22 @@ export default function MovieRec({querySlug}: movieRecParam) {
 
     const fetchRecs = async () => {
       try {
-        const res = await fetch("http://localhost:8000/predict/algorithm",                  // fetch top recommendations from API
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({query_slugs: [querySlug]}),
-        });
+        // const res = await fetch("http://localhost:8000/predict",                            // fetch top recommendations from API
+        // {
+        //   method: "POST",
+        //   headers: {"Content-Type": "application/json"},
+        //   body: JSON.stringify({query_slug: querySlug}),
+        // });
+        
+        const endpoint = method === "model" ? "http://localhost:8000/predict/model": "http://localhost:8000/predict/algorithm";
+        const res = await fetch(endpoint, 
+          {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(method === "model"
+              ? { query_slug: querySlug }
+              : { query_slugs: [querySlug] }), // The backend now supports a list for the algorithm endpoint, so even for a single movie, it should be passed in as a list
+          });
 
         const data: movieRec[] = await res.json();
         const top5 = data.slice(0, 5);
@@ -53,7 +64,7 @@ export default function MovieRec({querySlug}: movieRecParam) {
     };
 
     fetchRecs();
-  }, [querySlug]);
+  }, [querySlug, method]);
 
    if (!recommendations.length) {                                                           // placeholder cards to maintain layout
     return (
