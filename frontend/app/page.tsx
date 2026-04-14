@@ -41,8 +41,13 @@ export default function Home() {
 
       try {
         //const {data, error} = await supabase.from('movies').select('*').ilike('title', `${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col -- '%${search}%' = flexible but slow, search% = fast but less flexible
-        const {data, error} = await supabase.from('movies').select('*').textSearch('title', search);      // using precomputed index from query in supabase, jumps directly to matches 
-
+        // const {data, error} = await supabase.from('movies').select('*').textSearch('title', search);      // using precomputed index from query in supabase, jumps directly to matches 
+        const { data, error } = await supabase
+          .from('movies')
+          .select('*')
+          .textSearch('title', search, {
+            type: 'websearch'
+          });
         if (error) {
           setError('Error fetching movies');
           console.error(error);
