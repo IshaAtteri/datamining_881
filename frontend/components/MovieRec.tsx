@@ -73,7 +73,7 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
         const {data: moviesData, error} = await supabase                                    // fetch movie titles and poster filenames from Supabase
           .from("movies")
           // .select("slug, title, poster_filename")
-          .select("slug, title, poster_filename, plot, genre, release_date, cast, director")
+          .select("slug, title, poster_filename, plot, pre_genre, release_date, cast, director")
           .in("slug", top5.map((r) => r.slug));
 
         const movieMap = Object.fromEntries((moviesData || []).map((m) => [m.slug, m]));    // create lookup map from slug --> movie data
@@ -89,7 +89,7 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
           title: movieMap[rec.slug]?.title || rec.slug,
           poster_filename: movieMap[rec.slug]?.poster_filename || "",
           plot: movieMap[rec.slug]?.plot || "",
-          genre: movieMap[rec.slug]?.genre || [],
+          genre: movieMap[rec.slug]?.pre_genre || [],
           release_date: movieMap[rec.slug]?.release_date || "",
           cast: movieMap[rec.slug]?.cast || [],
           director: movieMap[rec.slug]?.director || "",
