@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {supabase} from '../lib/supabase';                                                   // supabase client
+import {PieChart, Pie, Cell} from "recharts";
 
 import ExpandMovie from "../components/ExpandMovie";
 import MovieCard from "../components/MovieCard";
@@ -31,6 +32,7 @@ type movieRec = {
 export default function MovieRec({querySlug, method}: movieRecParam) {
   const [recommendations, setRecommendations] = useState<movieRec[]>([]);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   const toggleMovie = (slug: string) => {setExpandedSlug((prev) => (prev === slug ? null : slug));};
   const expandedMovie = recommendations.find((m) => m.slug === expandedSlug);
@@ -118,19 +120,44 @@ return (
   <div className="flex flex-col gap-6 mt-5">
     <div className="flex gap-6 flex-wrap justify-center">
       {recommendations.map((rec) => {
-        const isSelected = expandedSlug === rec.slug;
-        const isDimmed = expandedSlug && !isSelected;
+        // const isSelected = expandedSlug === rec.slug;
+        const isExpanded = expandedSlug === rec.slug;
+        const isHovered = hovered === rec.slug;
+        const showOverlay = isExpanded || isHovered;
 
         return (
-          <div key={rec.slug} id={`movie-${rec.slug}`} className={`relative group w-45 h-65 bg-box/95 border rounded-md shadow transition-all duration-300 overflow-hidden
-              ${isSelected ? "scale-105 z-20 ring-2 ring-white" : isDimmed ? "opacity-40" : "hover:scale-102"}`}>
+          <div key={rec.slug} id={`movie-${rec.slug}`} onMouseEnter={() => setHovered(rec.slug)} onMouseLeave={() => setHovered(null)} 
+            className={`relative group w-45 h-65 bg-box/95 border rounded-md shadow transition-all duration-300 overflow-hidden
+              ${isExpanded ? "scale-105 z-20 ring-2 ring-white" : "hover:scale-102"}`}>
+              {/* ${isSelected ? "scale-105 z-20 ring-2 ring-white" : "hover:scale-102"}`} */}
 
               <img
                 src={`https://qivcmhdrljwmpwujkwqd.supabase.co/storage/v1/object/public/Wiki_Images/wikipedia_images/${rec.poster_filename}`}
                 className="w-full h-full object-cover"
               />
 
-            <div className="absolute inset-0 bg-gray-900/50 opacity-0 group-hover:opacity-100 transition rounded-md" />
+            {/* <div className="absolute inset-0 bg-gray-900/50 opacity-0 group-hover:opacity-100 transition rounded-md" /> */}
+
+              <div className={`absolute inset-0 flex items-center justify-center transition bg-gray-900/50 ${showOverlay ? "opacity-100" : "opacity-0"}`}>
+                <div className="relative flex items-center justify-center">
+                  <PieChart width = {90} height = {90}>
+                    <Pie
+                      data = {[{name: "score", value: rec.score}, {name: "remaining", value: 1 - rec.score},]}
+                      dataKey = "value"
+                      innerRadius = {30}
+                      outerRadius = {40}
+                      startAngle = {90}
+                      endAngle = {-270}
+                    >
+                      <Cell fill = "#99C24D" />
+                      <Cell fill = "#E0F0F6" />
+                    </Pie>
+                  </PieChart>
+                  <div className="absolute text-white font-bold text-sm">
+                    {(rec.score * 100).toFixed(0)}%
+                  </div>
+                </div>
+              </div>
 
             <div className="absolute bottom-0 w-full bg-black/60 text-white text-sm p-1 text-center">
               {(rec.title || rec.slug).replace(/\([^)]*\bfilm\b[^)]*\)/gi, "")}

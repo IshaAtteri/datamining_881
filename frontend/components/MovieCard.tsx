@@ -3,6 +3,7 @@ import {useState} from "react";
 
 type Movie = {
   slug: string;
+  score?: number; 
   title?: string;
   poster_filename?: string;
   plot?: string;
@@ -33,7 +34,8 @@ export default function MovieCard({movie}: Params) {
 
         {movie.release_date && (
           <span className="px-2 py-0.5 bg-gray-200/50 rounded-full text-xs w-fit border-2 border-background/60 backdrop-blur-sm hover:bg-highlight/60 hover:border-background hover:scale-[1.01]">
-            {movie.release_date}
+            {movie.release_date?.match(/\d{4}/)?.[0]} 
+            {/* directly extracts year */}
           </span>
         )}
       </div>
