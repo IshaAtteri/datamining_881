@@ -6,6 +6,7 @@ import {PieChart, Pie, Cell} from "recharts";
 
 import ExpandMovie from "../components/ExpandMovie";
 import MovieCard from "../components/MovieCard";
+import LikeButton from "../components/LikeButton";
 
 type movieRecParam = {
   querySlug: string;                                                                        // querySlug = slug of searched movie
@@ -126,15 +127,25 @@ return (
         const showOverlay = isExpanded || isHovered;
 
         return (
-          <div key={rec.slug} id={`movie-${rec.slug}`} onMouseEnter={() => setHovered(rec.slug)} onMouseLeave={() => setHovered(null)} 
+          <div key={rec.slug} id={`movie-${rec.slug}`} onMouseEnter={() => setHovered(rec.slug)} onMouseLeave={() => setHovered(null)}
             className={`relative group w-45 h-65 bg-box/95 border rounded-md shadow transition-all duration-300 overflow-hidden
               ${isExpanded ? "scale-105 z-20 ring-2 ring-white" : "hover:scale-102"}`}>
-              {/* ${isSelected ? "scale-105 z-20 ring-2 ring-white" : "hover:scale-102"}`} */}
 
-              <img
-                src={`https://qivcmhdrljwmpwujkwqd.supabase.co/storage/v1/object/public/Wiki_Images/wikipedia_images/${rec.poster_filename}`}
-                className="w-full h-full object-cover"
-              />
+              <div className="absolute top-0 w-full bg-black/60 text-white text-xs p-1 text-center line-clamp-2 z-20">
+                {(rec.title || rec.slug).replace(/\([^)]*\bfilm\b[^)]*\)/gi, "")}
+              </div>
+
+              {rec.poster_filename ? (
+                <img
+                  src={`https://qivcmhdrljwmpwujkwqd.supabase.co/storage/v1/object/public/Wiki_Images/wikipedia_images/${rec.poster_filename}`}
+                  className="w-full h-full object-cover"
+                  alt={rec.title}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-700">
+                  <span className="text-center text-sm text-gray-300 px-2">{rec.title}</span>
+                </div>
+              )}
 
             {/* <div className="absolute inset-0 bg-gray-900/50 opacity-0 group-hover:opacity-100 transition rounded-md" /> */}
 
@@ -159,12 +170,12 @@ return (
                 </div>
               </div>
 
-            <div className="absolute bottom-0 w-full bg-black/60 text-white text-sm p-1 text-center">
-              {(rec.title || rec.slug).replace(/\([^)]*\bfilm\b[^)]*\)/gi, "")}
+            <div className="absolute bottom-2 left-2 z-10">
+              <ExpandMovie onClick={() => toggleMovie(rec.slug)} isOpen={expandedSlug === rec.slug}/>
             </div>
 
             <div className="absolute bottom-2 right-2 z-10">
-              <ExpandMovie onClick={() => toggleMovie(rec.slug)} isOpen={expandedSlug === rec.slug}/>
+              <LikeButton slug={rec.slug}/>
             </div>
 
           </div>

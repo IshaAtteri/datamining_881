@@ -33,12 +33,13 @@ slug_to_idx = None
 weights = None
 precomputed_algorithm = None
 precomputed_model = None
+parsed_metadata = None
 
 MODELS_FOLDER = "models-item-item-05milpairs-150coraters"
 
 @app.on_event("startup")
 def load_model_and_data():
-    global model, feature_cols, movies_df, embeddings, embedding_norms, slug_to_idx, weights, precomputed_algorithm, precomputed_model
+    global model, feature_cols, movies_df, embeddings, embedding_norms, slug_to_idx, weights, precomputed_algorithm, precomputed_model, parsed_metadata
     base_dir = Path(__file__).parent.parent.parent
 
     # load feature weights
@@ -80,11 +81,26 @@ def load_model_and_data():
         movies_df = pd.DataFrame(metadata)
         slug_to_idx = {movie['Slug']: i for i, movie in enumerate(metadata)}
         print(f"Loaded {len(movies_df)} movies with {embeddings.shape[1]}-dim embeddings")
+
+
+
+        # pre-parse metadata for fast feature computation
+        parsed_metadata = []
+        for movie in metadata:
+            parsed_metadata.append({
+                'slug': movie['Slug'],
+                'year': extract_year(movie.get('Release Date')),
+                'genres': set(str(movie.get('Genre', '')).lower().split()),
+                'director': str(movie.get('Director', '')).lower(),
+                'cast': set(get_cast(movie))
+            })
+        print(f"Pre-parsed metadata for {len(parsed_metadata)} movies")
     except FileNotFoundError:
         embeddings = None
         embedding_norms = None
         movies_df = None
         slug_to_idx = None
+        parsed_metadata = None
         print(f"Embeddings file not found: {embeddings_path}. Server will start but scoring endpoints will fail until data is available.")
 
     # load precomputed recommendations
@@ -154,6 +170,15 @@ def compute_pairwise_features(query_movie, candidate_movie, query_emb, candidate
 
     return features
 
+def compute_pairwise_features_fast(query_parsed, candidate_parsed, query_emb, candidate_emb, query_norm, candidate_norm):
+    features = {}
+    features['plot_sim'] = float(np.dot(query_emb, candidate_emb) / (query_norm * candidate_norm))
+    features['year_sim'] = max(0.0, 1.0 - abs(query_parsed['year'] - candidate_parsed['year'])/50.0)
+    features['genre_sim'] = jaccard_similarity(query_parsed['genres'], candidate_parsed['genres'])
+    features['director_match'] = 1.0 if query_parsed['director'] and query_parsed['director'] == candidate_parsed['director'] else 0.0
+    features['cast_sim'] = jaccard_similarity(query_parsed['cast'], candidate_parsed['cast'])
+    return features
+
 class AlgorithmRequest(BaseModel):
     query_slugs: List[str]  # one or more movies; algorithm averages scores across all
 
@@ -171,17 +196,29 @@ def score_all_against(query_slug: str, use_model: bool) -> List[dict]:
         raise HTTPException(status_code=404, detail=f"Query movie not found: {query_slug}")
     if use_model and (model is None or feature_cols is None):
         raise HTTPException(status_code=503, detail="Trained model not available")
+
     query_idx = slug_to_idx[query_slug]
-    query_movie = movies_df.iloc[query_idx].to_dict()
     query_emb = embeddings[query_idx]
+    query_norm = embedding_norms[query_idx]
+    query_parsed = parsed_metadata[query_idx] if parsed_metadata else None
 
     scores = []
-    for i, row in movies_df.iterrows():
-        slug = row['Slug']
-        if slug == query_slug:
+    n_movies = len(parsed_metadata) if parsed_metadata else len(movies_df)
+
+    for i in range(n_movies):
+        if i == query_idx:
             continue
+
+        slug = parsed_metadata[i]['slug'] if parsed_metadata else movies_df.iloc[i]['Slug']
         cand_emb = embeddings[i]
-        features = compute_pairwise_features(query_movie, row.to_dict(), query_emb, cand_emb)
+        cand_norm = embedding_norms[i]
+
+        if parsed_metadata and query_parsed:
+            features = compute_pairwise_features_fast(query_parsed, parsed_metadata[i], query_emb, cand_emb, query_norm, cand_norm)
+        else:
+            cand_movie = movies_df.iloc[i].to_dict()
+            features = compute_pairwise_features(movies_df.iloc[query_idx].to_dict(), cand_movie, query_emb, cand_emb)
+
         if use_model:
             X = np.array([[features[col] for col in feature_cols]])
             score = float(model.predict(X)[0])
@@ -204,7 +241,7 @@ def predict_model(request: ModelRequest):
 
 @app.post("/predict/algorithm", response_model=List[ScoreResponse])
 def predict_algorithm(request: AlgorithmRequest):
-    query_slugs = list(dict.fromkeys(request.query_slugs))  # deduplicate andd preserve order
+    query_slugs = list(dict.fromkeys(request.query_slugs))  # deduplicate and preserve order
 
     if len(query_slugs) == 1:
         # single movie  use precomputed if available
@@ -220,21 +257,42 @@ def predict_algorithm(request: AlgorithmRequest):
     if movies_df is None or embeddings is None:
         raise HTTPException(status_code=503, detail="Movie data not loaded")
 
-    slug_scores: dict[str, list[float]] = {}
+    query_indices = []
     for query_slug in query_slugs:
         if query_slug not in slug_to_idx:
             raise HTTPException(status_code=404, detail=f"Query movie not found: {query_slug}")
-        query_idx = slug_to_idx[query_slug]
-        query_movie = movies_df.iloc[query_idx].to_dict()
-        query_emb = embeddings[query_idx]
-        for i, row in movies_df.iterrows():
-            slug = row['Slug']
-            if slug in query_slugs:
-                continue
-            cand_emb = embeddings[i]
-            features = compute_pairwise_features(query_movie, row.to_dict(), query_emb, cand_emb)
+        query_indices.append(slug_to_idx[query_slug])
+
+    query_set = set(query_indices)
+    n_movies = len(parsed_metadata) if parsed_metadata else len(movies_df)
+
+    slug_scores: dict[str, list[float]] = {}
+
+    #or each candidate movie, compute scores against all query movies.
+    for i in range(n_movies):
+        if i in query_set:
+            continue
+
+        cand_slug = parsed_metadata[i]['slug'] if parsed_metadata else movies_df.iloc[i]['Slug']
+        cand_emb = embeddings[i]
+        cand_norm = embedding_norms[i]
+
+        scores_for_candidate = []
+        for query_idx in query_indices:
+            query_emb = embeddings[query_idx]
+            query_norm = embedding_norms[query_idx]
+
+            if parsed_metadata:
+                features = compute_pairwise_features_fast(parsed_metadata[query_idx], parsed_metadata[i], query_emb, cand_emb, query_norm, cand_norm)
+            else:
+                query_movie = movies_df.iloc[query_idx].to_dict()
+                cand_movie = movies_df.iloc[i].to_dict()
+                features = compute_pairwise_features(query_movie, cand_movie, query_emb, cand_emb)
+
             score = sum(weights[k] * features[k] for k in weights)
-            slug_scores.setdefault(slug, []).append(score)
+            scores_for_candidate.append(score)
+
+        slug_scores[cand_slug] = scores_for_candidate
 
     combined = [{"slug": s, "score": sum(v) / len(v)} for s, v in slug_scores.items()]
     combined.sort(key=lambda x: x["score"], reverse=True)

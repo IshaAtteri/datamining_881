@@ -67,8 +67,8 @@ export default function Page({params}: {params: any}) {
               className="w-50 h-70 object-cover rounded-md bg-box/95"
             />
             <div className="absolute inset-0 bg-gray-900/50 opacity-0 group-hover:opacity-100 transition rounded-md" />
-            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition">
-              <LikeButton/>
+            <div className="absolute bottom-2 right-2 z-10">
+              <LikeButton slug={movie.slug}/>
             </div>
           </>
           )}

@@ -1,8 +1,10 @@
-"use client";                                                                         // needed for client-specific features like interactivity, state, event handlers 
+"use client";                                                                         // needed for client-specific features like interactivity, state, event handlers
 
 import {useState, useEffect, useRef} from "react";
 import {useRouter} from "next/navigation";
-import {supabase} from '../lib/supabase';                                             // import Supabase client 
+import {supabase} from '../lib/supabase';                                             // import Supabase client
+import {IoMdHeartDislike} from "react-icons/io";
+import {useLikes} from '../lib/useLikes';
 
 import Likes from "../components/Likes";
 import Recs from "../components/Recs";
@@ -14,14 +16,15 @@ type movie = {                                                                  
 };
 
 export default function Home() {
-  const [search, setSearch] = useState("");         
-  const [error, setError] = useState("");    
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
   const [moviesList, setMoviesList] = useState<any[]>([]);
 
   const [suggestions, setSuggestions] = useState<movie[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const router = useRouter();                                                         // router object for navigating to other pages  
+  const router = useRouter();                                                         // router object for navigating to other pages
+  const {likedSlugs, clearLikes, isMaxLikes} = useLikes();
 
   useEffect(() => {                                                                   // fetch movie data on page load
     const fetchMovies = async () => {
@@ -38,7 +41,7 @@ export default function Home() {
     fetchMovies();
   }, []);
 
-  
+
   const fetchSuggestions = async (value: string) => {
   const trimmedValue = value.trim();
 
@@ -90,11 +93,11 @@ const handleSuggestionClick = (movie: movie) => {
   const userSearch = async (e: any) => {                                              // handles form submission - must be async for await to work (await = pauses until JSON parsing is complete!)
     e.preventDefault();                                                               // prevent default form submission (page reloading)
 
-    if (!search.trim()) return;                                                       // if search is empty don't do anything 
+    if (!search.trim()) return;                                                       // if search is empty don't do anything
 
       try {
         //const {data, error} = await supabase.from('movies').select('*').ilike('title', `${search}%`);  // use 'ilike' for case-insensitive matching of 'title' col -- '%${search}%' = flexible but slow, search% = fast but less flexible
-        // const {data, error} = await supabase.from('movies').select('*').textSearch('title', search);      // using precomputed index from query in supabase, jumps directly to matches 
+        // const {data, error} = await supabase.from('movies').select('*').textSearch('title', search);      // using precomputed index from query in supabase, jumps directly to matches
         const { data, error } = await supabase
           .from('movies')
           .select('*')
@@ -107,10 +110,10 @@ const handleSuggestionClick = (movie: movie) => {
           return;
         }
 
-        if (data && data.length > 0) {                                                // if movie found and has slug, navigate to first movie's detail page 
-          
+        if (data && data.length > 0) {                                                // if movie found and has slug, navigate to first movie's detail page
+
           router.push(`/movie/${data[0].slug}`);
-        } else 
+        } else
           setError('Movie not found');
       } catch (err) {
         setError('Error fetching movies');
@@ -126,7 +129,7 @@ const handleSuggestionClick = (movie: movie) => {
       //   else
       //     setError("Movie not found");                    // if no movies were returned or first movie has no slug, show error message
       // }
-      // catch (err) 
+      // catch (err)
       // {
       //   setError("Error fetching movies");
       //   console.error(err);
@@ -135,6 +138,22 @@ const handleSuggestionClick = (movie: movie) => {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-background font-sans">
+      {likedSlugs.length > 0 && (
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+          {isMaxLikes && (
+            <div className="text-sm text-yellow-400 bg-yellow-900/30 px-3 py-1 rounded">
+              Like limit reached (6/6). Unlike a movie to like others.
+            </div>
+          )}
+          <button
+            onClick={clearLikes}
+            className="flex items-center gap-2 px-3 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded transition"
+          >
+            <IoMdHeartDislike className="w-5 h-5" />
+            Clear Likes
+          </button>
+        </div>
+      )}
       <main className="flex flex-1 w-full max-w-5xl flex-col items-center justify-between py-12 sm:items-start">
         <form onSubmit={userSearch} className="flex gap-2">
         <div className="relative">
@@ -145,12 +164,12 @@ const handleSuggestionClick = (movie: movie) => {
             onChange={async (e) => {
               const value = e.target.value;
               setSearch(e.target.value);                                              // update search text as user types
-              setError("");                                                           // clear error when user starts typing 
-              await fetchSuggestions(value); 
+              setError("");                                                           // clear error when user starts typing
+              await fetchSuggestions(value);
             }}
             className="px-4 py-2 border rounded bg-box w-230"
           />
-          {search && (                                                                // clear button 
+          {search && (                                                                // clear button
             <button type="button" onClick={() => {
               setSearch("");
               setSuggestions([])
