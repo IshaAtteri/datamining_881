@@ -40,10 +40,10 @@ MODELS_FOLDER = "models-item-item-05milpairs-150coraters"
 @app.on_event("startup")
 def load_model_and_data():
     global model, feature_cols, movies_df, embeddings, embedding_norms, slug_to_idx, weights, precomputed_algorithm, precomputed_model, parsed_metadata
-    base_dir = Path(__file__).parent.parent.parent
+    base_dir = Path(__file__).parent
 
     # load feature weights
-    weights_path = base_dir / "pipeline_code" / "6_serving" / "weights.json"
+    weights_path = base_dir / "weights.json"
     if weights_path.exists():
         try:
             with open(weights_path) as f:
@@ -59,9 +59,9 @@ def load_model_and_data():
         weights = {"plot_sim":0.3,"year_sim":0.15,"genre_sim":0.2,"director_match":0.15,"cast_sim":0.2}
 
     # load trained model if available
-    model_path = base_dir / "data" / "processed" / MODELS_FOLDER / "item_item_recommender.pkl"
+    model_path = base_dir / MODELS_FOLDER / "item_item_recommender.pkl"
     print(model_path)
-    feature_path = base_dir / "data" / "processed" / MODELS_FOLDER / "feature_columns.json"
+    feature_path = base_dir / MODELS_FOLDER / "feature_columns.json"
     if model_path.exists() and feature_path.exists():
         model = joblib.load(model_path)
         with open(feature_path) as f:
@@ -71,7 +71,7 @@ def load_model_and_data():
         print(f"Model not found at {model_path}. /predict/model endpoint will be unavailable.")
 
     # load embeddings and metadata
-    embeddings_path = base_dir / "data" / "processed" / "xplot_embeddings_full_data.npy"
+    embeddings_path = base_dir / "xplot_embeddings_full_data.npy"
 
     try:
         combined_data = np.load(embeddings_path, allow_pickle=True).item()
@@ -104,7 +104,7 @@ def load_model_and_data():
         print(f"Embeddings file not found: {embeddings_path}. Server will start but scoring endpoints will fail until data is available.")
 
     # load precomputed recommendations
-    precomputed_dir = base_dir / "data" / "processed" / "precomputed_recommendations"
+    precomputed_dir = base_dir / "precomputed_recomendations"
     algo_path = precomputed_dir / "algorithm.json"
     model_path_pre = precomputed_dir / "model.json"
 

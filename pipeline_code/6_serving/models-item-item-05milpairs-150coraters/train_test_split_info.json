@@ -1,0 +1,11 @@
+{
+  "total_pairs": 500000,
+  "train_pairs": 300000,
+  "eval_pairs": 200000,
+  "train_fraction": 0.6,
+  "train_rows": 50000,
+  "eval_rows": 50000,
+  "min_co_raters": 150,
+  "max_pairs": 500000,
+  "random_seed": 42
+}

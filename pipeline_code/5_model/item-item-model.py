@@ -1,7 +1,7 @@
 # plan
 # load data  -> User ratings + movie metadata/embeddings
 # center ratings  -> Subtract each user's average (remove bias - sub avg)
-# build sparse matrix  -> (movies × users) with centered ratings
+# build sparse matrix  -> (movies users) with centered ratings
 # filter pairs  -> Keep only pairs with 100+ shared users
 # compute cosine similarity  -> Measure how similarly users rate each pair
 # compute content features  -> plot similarity, cast overlap, embedding distance, etc.
