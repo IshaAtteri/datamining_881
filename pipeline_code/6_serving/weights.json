@@ -1,0 +1,7 @@
+{
+  "plot_sim": 0.30,
+  "year_sim": 0.15,
+  "genre_sim": 0.20,
+  "director_match": 0.15,
+  "cast_sim": 0.20
+}
