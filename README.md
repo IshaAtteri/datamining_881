@@ -1,6 +1,6 @@
 # CSE 881: Data Mining - Movie Recommendation System
 
-Movie recommendation system using both algorithm-based (item-item collab filtering) and model-based approaches, combining IMDB data, Wikipedia plots, and Netflix ratings.
+Movie recommendation system using both algorithm-based and model-based (xgboost) approaches, combining IMDB data, Wikipedia plots, and Netflix ratings.
 
 ## Setup
 
