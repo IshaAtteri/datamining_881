@@ -17,7 +17,7 @@ app = FastAPI(title="Model Endpoint")
 ################
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # current Next.js frontend url -- will need to change when switching to vercel
+    allow_origins=["*"],  # allow all
     allow_credentials=True,
     allow_methods=["*"],                      # allow POST, GET, OPTIONS, etc
     allow_headers=["*"],

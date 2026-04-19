@@ -30,7 +30,8 @@ export default function Recs() {
     const fetchRecs = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/predict/algorithm", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${apiUrl}/predict/algorithm`, {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({query_slugs: likedSlugs}),
@@ -44,16 +45,16 @@ export default function Recs() {
         }
 
         const data: Recommendation[] = await res.json();
-        const top5 = data.slice(0, 5);
+        const top10 = data.slice(0, 10);
 
         const {data: moviesData} = await supabase
           .from("movies")
           .select("slug, title, poster_filename")
-          .in("slug", top5.map((r) => r.slug));
+          .in("slug", top10.map((r) => r.slug));
 
         const movieMap = Object.fromEntries((moviesData || []).map((m) => [m.slug, m]));
 
-        const withMetadata = top5.map((rec) => ({
+        const withMetadata = top10.map((rec) => ({
           ...rec,
           title: movieMap[rec.slug]?.title || rec.slug,
           poster_filename: movieMap[rec.slug]?.poster_filename || "",
