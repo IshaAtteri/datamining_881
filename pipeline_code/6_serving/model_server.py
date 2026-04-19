@@ -6,11 +6,17 @@ from pydantic import BaseModel
 from typing import List
 import numpy as np
 import json
+import os
 from pathlib import Path
 import joblib
 import re
 import threading
 import gc
+import urllib.request
+import urllib.error
+
+LITE_MODE = os.getenv("LITE_MODE", "").lower() in ("1", "true", "yes")
+MULTI_MOVIE_BACKEND_URL = os.getenv("MULTI_MOVIE_BACKEND_URL", "").rstrip("/")
 
 app = FastAPI(title="Model Endpoint")
 
@@ -58,50 +64,57 @@ def _load_model_and_data():
         print('something is wrong. using default')
         weights = {"plot_sim":0.3,"year_sim":0.15,"genre_sim":0.2,"director_match":0.15,"cast_sim":0.2}
 
-    # load trained model if available
-    model_path = base_dir / MODELS_FOLDER / "item_item_recommender.pkl"
-    print(model_path)
-    feature_path = base_dir / MODELS_FOLDER / "feature_columns.json"
-    if model_path.exists() and feature_path.exists():
-        model = joblib.load(model_path)
-        with open(feature_path) as f:
-            feature_cols = json.load(f)
-        print(f"Loaded item-to-item model with features: {feature_cols}")
+    if LITE_MODE:
+        print("skipping trained model + embeddings load. Serving precomputed only.")
     else:
-        print(f"Model not found at {model_path}. /predict/model endpoint will be unavailable.")
+        model_path = base_dir / MODELS_FOLDER / "item_item_recommender.pkl"
+        print(model_path)
+        feature_path = base_dir / MODELS_FOLDER / "feature_columns.json"
+        if model_path.exists() and feature_path.exists():
+            model = joblib.load(model_path)
+            with open(feature_path) as f:
+                feature_cols = json.load(f)
+            print(f"Loaded item-to-item model with features: {feature_cols}")
+        else:
+            print(f"Model not found at {model_path}. /predict/model endpoint will be unavailable.")
 
-    # load embeddings and metadata
-    embeddings_path = base_dir / "xplot_embeddings_full_data.npy"
+        # load embeddings and metadata
+        embeddings_path = base_dir / "xplot_embeddings_full_data.npy"
 
-    try:
-        combined_data = np.load(embeddings_path, allow_pickle=True).item()
-        embeddings = combined_data['embeddings']
-        embedding_norms = np.linalg.norm(embeddings, axis=1).astype(np.float32, copy=False)
-        metadata = combined_data['metadata']
-        del combined_data
-        slug_to_idx = {movie['Slug']: i for i, movie in enumerate(metadata)}
-        print(f"Loaded {len(metadata)} movies with {embeddings.shape[1]}-dim embeddings")
+        try:
+            combined_data = np.load(embeddings_path, allow_pickle=True).item()
+            embeddings = combined_data['embeddings']
+            embedding_norms = np.linalg.norm(embeddings, axis=1).astype(np.float32, copy=False)
+            metadata = combined_data['metadata']
+            del combined_data
+            n_movies = len(metadata)
+            print(f"Loaded {n_movies} movies with {embeddings.shape[1]}-dim embeddings")
 
-        parsed_metadata = []
-        for movie in metadata:
-            parsed_metadata.append({
-                'slug': movie['Slug'],
-                'year': extract_year(movie.get('Release Date')),
-                'genres': set(str(movie.get('Genre', '')).lower().split()),
-                'director': str(movie.get('Director', '')).lower(),
-                'cast': set(get_cast(movie))
-            })
-        movies_df = True
-        del metadata
-        gc.collect()
-        print(f"Pre-parsed metadata for {len(parsed_metadata)} movies")
-    except FileNotFoundError:
-        embeddings = None
-        embedding_norms = None
-        movies_df = None
-        slug_to_idx = None
-        parsed_metadata = None
-        print(f"Embeddings file not found: {embeddings_path}. Server will start but scoring endpoints will fail until data is available.")
+            # single pass: build slug_to_idx + parsed_metadata, and free each raw dict as we go so peak RAM stays bounded
+            slug_to_idx = {}
+            parsed_metadata = []
+            for i in range(n_movies):
+                movie = metadata[i]
+                slug_to_idx[movie['Slug']] = i
+                parsed_metadata.append({
+                    'slug': movie['Slug'],
+                    'year': extract_year(movie.get('Release Date')),
+                    'genres': set(str(movie.get('Genre', '')).lower().split()),
+                    'director': str(movie.get('Director', '')).lower(),
+                    'cast': set(get_cast(movie))
+                })
+                metadata[i] = None  # release the full dict (Plot/Processed_Plot are the heavy fields)
+            movies_df = True
+            del metadata
+            gc.collect()
+            print(f"Pre-parsed metadata for {len(parsed_metadata)} movies")
+        except FileNotFoundError:
+            embeddings = None
+            embedding_norms = None
+            movies_df = None
+            slug_to_idx = None
+            parsed_metadata = None
+            print(f"Embeddings file not found: {embeddings_path}. Server will start but scoring endpoints will fail until data is available.")
 
     # load precomputed recommendations
     precomputed_dir = base_dir / "precomputed_recomendations"
@@ -249,9 +262,32 @@ def predict_model(request: ModelRequest):
     # fallback: compute live
     return score_all_against(request.query_slug, use_model=True)[:10]
 
+def _forward_multi_movie(payload: dict) -> list:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"{MULTI_MOVIE_BACKEND_URL}/predict/algorithm",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Upstream backend error: {e.code} {e.reason}")
+    except urllib.error.URLError as e:
+        raise HTTPException(status_code=502, detail=f"Upstream backend unreachable: {e.reason}")
+
 @app.post("/predict/algorithm", response_model=List[ScoreResponse])
 def predict_algorithm(request: AlgorithmRequest):
     query_slugs = list(dict.fromkeys(request.query_slugs))  # deduplicate and preserve order
+
+    if len(query_slugs) > 1:
+        if MULTI_MOVIE_BACKEND_URL:
+            return _forward_multi_movie(request.model_dump())
+        if LITE_MODE:
+            # no live compute available in lite mode and no remote backend: collapse to first slug
+            query_slugs = query_slugs[:1]
 
     if len(query_slugs) == 1:
         # single movie  use precomputed if available
@@ -312,6 +348,8 @@ def predict_algorithm(request: AlgorithmRequest):
 def health():
     return {
         "status": "healthy",
+        "lite_mode": LITE_MODE,
+        "multi_movie_backend_url": MULTI_MOVIE_BACKEND_URL or None,
         "model_loaded": model is not None,
         "precomputed_algorithm": precomputed_algorithm is not None,
         "precomputed_model": precomputed_model is not None,
