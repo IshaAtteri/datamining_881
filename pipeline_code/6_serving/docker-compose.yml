@@ -1,0 +1,8 @@
+services:
+  model-server:
+    build: .
+    image: model-server:latest
+    container_name: model-server
+    restart: unless-stopped
+    ports:
+      - "6543:8000"
