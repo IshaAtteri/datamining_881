@@ -5,12 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import numpy as np
-import pandas as pd
 import json
 from pathlib import Path
 import joblib
 import re
 import threading
+import gc
 
 app = FastAPI(title="Model Endpoint")
 
@@ -76,15 +76,12 @@ def _load_model_and_data():
     try:
         combined_data = np.load(embeddings_path, allow_pickle=True).item()
         embeddings = combined_data['embeddings']
-        embedding_norms = np.linalg.norm(embeddings, axis=1)
+        embedding_norms = np.linalg.norm(embeddings, axis=1).astype(np.float32, copy=False)
         metadata = combined_data['metadata']
-        movies_df = pd.DataFrame(metadata)
+        del combined_data
         slug_to_idx = {movie['Slug']: i for i, movie in enumerate(metadata)}
-        print(f"Loaded {len(movies_df)} movies with {embeddings.shape[1]}-dim embeddings")
+        print(f"Loaded {len(metadata)} movies with {embeddings.shape[1]}-dim embeddings")
 
-
-
-        # pre-parse metadata for fast feature computation
         parsed_metadata = []
         for movie in metadata:
             parsed_metadata.append({
@@ -94,6 +91,9 @@ def _load_model_and_data():
                 'director': str(movie.get('Director', '')).lower(),
                 'cast': set(get_cast(movie))
             })
+        movies_df = True
+        del metadata
+        gc.collect()
         print(f"Pre-parsed metadata for {len(parsed_metadata)} movies")
     except FileNotFoundError:
         embeddings = None
@@ -110,14 +110,20 @@ def _load_model_and_data():
 
     if algo_path.exists():
         with open(algo_path) as f:
-            precomputed_algorithm = json.load(f)
+            raw = json.load(f)
+        precomputed_algorithm = {k: [(r['slug'], r['score']) for r in v] for k, v in raw.items()}
+        del raw
+        gc.collect()
         print(f"Loaded precomputed algorithm recommendations for {len(precomputed_algorithm)} movies")
     else:
         print(f"No precomputed algorithm data found at {algo_path}. Run precompute.py first.")
 
     if model_path_pre.exists():
         with open(model_path_pre) as f:
-            precomputed_model = json.load(f)
+            raw = json.load(f)
+        precomputed_model = {k: [(r['slug'], r['score']) for r in v] for k, v in raw.items()}
+        del raw
+        gc.collect()
         print(f"Loaded precomputed model recommendations for {len(precomputed_model)} movies")
     else:
         print(f"No precomputed model data found at {model_path_pre}. Run precompute.py first.")
@@ -239,7 +245,7 @@ def predict_model(request: ModelRequest):
         results = precomputed_model.get(request.query_slug)
         if results is None:
             raise HTTPException(status_code=404, detail=f"Query movie not found: {request.query_slug}")
-        return results[:10]
+        return [{"slug": s, "score": sc} for s, sc in results[:10]]
     # fallback: compute live
     return score_all_against(request.query_slug, use_model=True)[:10]
 
@@ -254,7 +260,7 @@ def predict_algorithm(request: AlgorithmRequest):
             results = precomputed_algorithm.get(slug)
             if results is None:
                 raise HTTPException(status_code=404, detail=f"Query movie not found: {slug}")
-            return results[:10]
+            return [{"slug": s, "score": sc} for s, sc in results[:10]]
         return score_all_against(slug, use_model=False)[:10]
 
     # multiple movies: compute live and average scores across all query movies
