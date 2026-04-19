@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import joblib
 import re
+import threading
 
 app = FastAPI(title="Model Endpoint")
 
@@ -37,8 +38,7 @@ parsed_metadata = None
 
 MODELS_FOLDER = "models-item-item-05milpairs-150coraters"
 
-@app.on_event("startup")
-def load_model_and_data():
+def _load_model_and_data():
     global model, feature_cols, movies_df, embeddings, embedding_norms, slug_to_idx, weights, precomputed_algorithm, precomputed_model, parsed_metadata
     base_dir = Path(__file__).parent
 
@@ -121,6 +121,10 @@ def load_model_and_data():
         print(f"Loaded precomputed model recommendations for {len(precomputed_model)} movies")
     else:
         print(f"No precomputed model data found at {model_path_pre}. Run precompute.py first.")
+
+@app.on_event("startup")
+def startup_event():
+    threading.Thread(target=_load_model_and_data, daemon=True).start()
 
 def extract_year(date_str):
     if not date_str:
