@@ -60,7 +60,7 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
         //   body: JSON.stringify({query_slug: querySlug}),
         // });
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
         const endpoint = method === "model" ? `${apiUrl}/predict/model`: `${apiUrl}/predict/algorithm`;
         const res = await fetch(endpoint, 
           {
