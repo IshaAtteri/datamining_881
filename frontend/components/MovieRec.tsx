@@ -60,7 +60,8 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
         //   body: JSON.stringify({query_slug: querySlug}),
         // });
 
-        const endpoint = method === "model" ? "http://localhost:8000/predict/model": "http://localhost:8000/predict/algorithm";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const endpoint = method === "model" ? `${apiUrl}/predict/model`: `${apiUrl}/predict/algorithm`;
         const res = await fetch(endpoint, 
           {
             method: "POST",
@@ -73,7 +74,7 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
         const data: movieRec[] = await res.json();
         const top5 = data.slice(0, 5);
 
-        const {data: moviesData, error} = await supabase                                    // fetch movie titles and poster filenames from Supabase
+        const {data: moviesData} = await supabase                                    // fetch movie titles and poster filenames from Supabase
           .from("movies")
           // .select("slug, title, poster_filename")
           .select("slug, title, poster_filename, plot, pre_genre, release_date, cast, director")
@@ -81,7 +82,7 @@ export default function MovieRec({querySlug, method}: movieRecParam) {
 
         const movieMap = Object.fromEntries((moviesData || []).map((m) => [m.slug, m]));    // create lookup map from slug --> movie data
 
-        // const withTitles = top5.map((rec) => ({                                             // combine API and Supabase results 
+        // const withTitles = top5.map((rec) => ({                                             // combine API and Supabase results
         //   ...rec,
         //   title: movieMap[rec.slug]?.title || rec.slug,
         //   poster_filename: movieMap[rec.slug]?.poster_filename || "",

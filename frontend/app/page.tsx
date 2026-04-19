@@ -182,7 +182,7 @@ const handleSuggestionClick = (movie: movie) => {
           )}
 
           {showDropdown && suggestions.length > 0 && (
-              <ul className="absolute left-0 right-0 top-full mt-1 bg-white border rounded shadow z-10">
+              <ul className="absolute left-0 right-0 top-full mt-1 bg-white border rounded shadow z-50">
                 {suggestions.map((movie) => (
                   <li
                     key={movie.slug}
