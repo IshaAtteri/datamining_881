@@ -1,5 +1,7 @@
 # CSE 881: Data Mining - Course Project
 
+The interactive web-based prototype can be accessed at: https://resilient-truth-production-eaba.up.railway.app/
+
 ## Setup
 
 Note: If you're using a IDE like PyCharm, step 1-2 may be done automatically.
