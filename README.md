@@ -1,5 +1,7 @@
 # CSE 881: Data Mining - Movie Recommendation System
 
+The interactive web-based prototype can be accessed at: https://resilient-truth-production-eaba.up.railway.app/
+
 Movie recommendation system using both algorithm-based and model-based (xgboost) approaches, combining IMDB data, Wikipedia plots, and Netflix ratings. If you would like to directly run the model server, you may unzip the model file and use the precomputed algorithm output within the 6_serving folder. 
 
 ## Setup
